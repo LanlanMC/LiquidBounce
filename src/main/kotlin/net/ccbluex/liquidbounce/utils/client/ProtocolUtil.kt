@@ -37,11 +37,6 @@ val hasProtocolTranslator = runCatching {
     true
 }.getOrDefault(false)
 
-val hasVisualSettings = runCatching {
-    Class.forName("de.florianmichael.viafabricplus.settings.impl.VisualSettings")
-    true
-}.getOrDefault(false)
-
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
@@ -128,15 +123,6 @@ fun openVfpProtocolSelection() {
     }
 
     VfpCompatibility.INSTANCE.unsafeOpenVfpProtocolSelection()
-}
-
-fun disableConflictingVfpOptions() {
-    // Check if the ViaFabricPlus mod is loaded
-    if (!usesViaFabricPlus || !hasVisualSettings) {
-        return
-    }
-
-    VfpCompatibility.INSTANCE.unsafeDisableConflictingVfpOptions()
 }
 
 fun sendSignUpdate(blockPos: BlockPos, lines: Array<String>) {

@@ -206,9 +206,13 @@ inline fun ClientWorld.getEntitiesBoxInRange(
 }
 
 fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
-    EventManager.callEvent(AttackEntityEvent(this))
+    if (EventManager.callEvent(AttackEntityEvent(this) {
+        attack(swing, keepSprint)
+    }).isCancelled) {
+        return
+    }
 
-    with (player) {
+    with(player) {
         // Swing before attacking (on 1.8)
         if (swing && isOlderThanOrEqual1_8) {
             swingHand(Hand.MAIN_HAND)
@@ -221,7 +225,7 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
                 if (this.isUsingRiptide) {
                     this.riptideAttackDamage
                 } else {
-                    getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+                    getAttributeValue(EntityAttributes.ATTACK_DAMAGE).toFloat()
                 }
             val damageSource = this.damageSources.playerAttack(this)
             var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
