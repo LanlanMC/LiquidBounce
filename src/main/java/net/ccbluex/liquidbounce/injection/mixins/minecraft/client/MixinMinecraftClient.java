@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
-import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getHasProtocolTranslator;
+import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
 
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
@@ -182,7 +182,7 @@ public abstract class MixinMinecraftClient {
         titleBuilder.append(" | ");
 
         // ViaFabricPlus compatibility
-        if (getHasProtocolTranslator()) {
+        if (getUsesViaFabricPlus()) {
             var protocolVersion = VfpCompatibility.INSTANCE.unsafeGetProtocolVersion();
 
             if (protocolVersion != null) {
