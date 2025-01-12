@@ -22,7 +22,8 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.InputHandleEvent
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -157,7 +158,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     }
 
     @Suppress("unused")
-    val rotationUpdateHandler = handler<SimulatedTickEvent> {
+    val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
             InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen
@@ -209,7 +210,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             return@tickHandler
         }
 
-        if (player.isSprinting && shouldBlockSprinting()) {
+        if (player.isSprinting && shouldBlockSprinting) {
             player.isSprinting = false
             return@tickHandler
         }
@@ -294,7 +295,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
                     }
 
                     // Attack enemy
-                    chosenEntity.attack(true, keepSprint && !shouldBlockSprinting())
+                    chosenEntity.attack(true, keepSprint && !shouldBlockSprinting)
                     KillAuraNotifyWhenFail.failedHitsIncrement = 0
 
                     GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
@@ -377,11 +378,15 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
                 break
             }
 
+            val (rotation, vec) = spot
+
             RotationManager.aimAt(
-                spot,
-                target,
-                considerInventory = !ignoreOpenInventory,
-                rotations,
+                rotations.toAimPlan(
+                    rotation,
+                    vec,
+                    target,
+                    considerInventory = !ignoreOpenInventory
+                ),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -390,18 +395,19 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
         // Choose enemy for fight bot
         if (KillAuraFightBot.enabled) {
-            // Because target tracker enemies are sorted by priority, we can just take the first one
-            val targetByPriority = targetTracker.enemies().firstOrNull() ?: return
+            val target = targetTracker.enemies().firstOrNull()
+            if (target != null) {
+                targetTracker.lock(target)
+            }
 
-            val rotationToEnemy = KillAuraFightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
-            // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
-                    changeLook = true),
+                rotations.toAimPlan(
+                    KillAuraFightBot.getMovementRotation() ?: return,
+                    considerInventory = !ignoreOpenInventory
+                ),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
-            targetTracker.lock(targetByPriority)
         }
     }
 
@@ -540,10 +546,19 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         }
     }
 
-    fun shouldBlockSprinting() = running && !player.isOnGround &&
-        criticalsMode != CriticalsMode.IGNORE &&
-        targetTracker.lockedOnTarget != null &&
-        clickScheduler.isClickOnNextTick(1)
+    val shouldBlockSprinting
+        get() = !player.isOnGround &&
+            criticalsMode != CriticalsMode.IGNORE &&
+            targetTracker.lockedOnTarget != null &&
+            clickScheduler.isClickOnNextTick(1)
+
+    @Suppress("unused")
+    private val sprintHandler = handler<SprintEvent> { event ->
+        if (shouldBlockSprinting && (event.source == SprintEvent.Source.MOVEMENT_TICK ||
+                event.source == SprintEvent.Source.INPUT)) {
+            event.sprint = false
+        }
+    }
 
     private enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),

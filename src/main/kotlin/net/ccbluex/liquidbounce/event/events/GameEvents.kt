@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.option.Perspective
 import net.minecraft.client.session.Session
@@ -53,7 +54,20 @@ class KeyEvent(val key: InputUtil.Key, val action: Int) : Event()
 object InputHandleEvent : Event()
 
 @Nameable("movementInput")
-class MovementInputEvent(var directionalInput: DirectionalInput, var jump: Boolean, var sneak: Boolean) : Event()
+class MovementInputEvent(
+    var directionalInput: DirectionalInput,
+    var jump: Boolean,
+    var sneak: Boolean
+) : Event()
+
+@Nameable("sprint")
+class SprintEvent(val directionalInput: DirectionalInput, var sprint: Boolean, val source: Source) : Event() {
+    enum class Source {
+        INPUT,
+        MOVEMENT_TICK,
+        NETWORK
+    }
+}
 
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
@@ -70,6 +84,9 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
+
+@Nameable("autoJump")
+class MinecraftAutoJumpEvent(var autoJump: Boolean) : Event()
 
 /**
  * All events which are related to the minecraft client
@@ -113,7 +130,7 @@ class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event(
 
 @Nameable("serverConnect")
 @WebSocketEvent
-class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()
+class ServerConnectEvent(val serverInfo: ServerInfo) : Event()
 
 @Nameable("disconnect")
 @WebSocketEvent
