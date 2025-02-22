@@ -16,10 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.utils.aiming.utils
 
-import net.ccbluex.liquidbounce.utils.aiming.RotationUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.Entity
+import net.minecraft.util.math.MathHelper
 
 fun ClientPlayerEntity.setRotation(rotation: Rotation) {
     rotation.normalize().let { normalizedRotation ->
@@ -34,3 +40,31 @@ fun ClientPlayerEntity.setRotation(rotation: Rotation) {
 }
 
 fun ClientPlayerEntity.withFixedYaw(rotation: Rotation) = rotation.yaw + angleDifference(yaw, rotation.yaw)
+
+object RotationUtil {
+
+    val gcd: Double
+        get() {
+            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
+            return f * f * f * 8.0 * 0.15F
+        }
+
+    /**
+     * Calculates the angle between the cross-hair and the entity.
+     *
+     * Useful for deciding if the player is looking at something or not.
+     */
+    fun crosshairAngleToEntity(entity: Entity): Float {
+        val player = mc.player ?: return 0.0F
+        val eyes = player.eyePos
+
+        val rotationToEntity = Rotation.Companion.lookingAt(point = entity.box.center, from = eyes)
+
+        return player.rotation.angleTo(rotationToEntity)
+    }
+
+    /**
+     * Calculate difference between two angle points
+     */
+    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+}
