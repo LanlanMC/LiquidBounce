@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
@@ -94,19 +95,25 @@ public abstract class MixinInGameHud {
         }
     }
 
+    @Inject(method = "renderSpyglassOverlay", at = @At("HEAD"), cancellable = true)
+    private void hookRenderSpyglassOverlay(DrawContext context, float scale, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.SPYGLASS_OVERLAY)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
     private void injectPumpkinBlur(DrawContext context, Identifier texture, float opacity, CallbackInfo callback) {
-        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleAntiBlind.INSTANCE.getRunning()) {
             return;
         }
 
-        if (module.getPumpkinBlur() && liquid_bounce$PUMPKIN_BLUR.equals(texture)) {
+        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && liquid_bounce$PUMPKIN_BLUR.equals(texture)) {
             callback.cancel();
             return;
         }
 
-        if (module.getPowderSnowFog() && POWDER_SNOW_OUTLINE.equals(texture)) {
+        if (!ModuleAntiBlind.canRender(DoRender.POWDER_SNOW_FOG) && POWDER_SNOW_OUTLINE.equals(texture)) {
             callback.cancel();
         }
     }
@@ -140,8 +147,7 @@ public abstract class MixinInGameHud {
 
     @Inject(method = "renderPortalOverlay", at = @At("HEAD"), cancellable = true)
     private void hookRenderPortalOverlay(CallbackInfo ci) {
-        var antiBlind = ModuleAntiBlind.INSTANCE;
-        if (antiBlind.getRunning() && antiBlind.getPortalOverlay()) {
+        if (!ModuleAntiBlind.canRender(DoRender.PORTAL_OVERLAY)) {
             ci.cancel();
         }
     }
@@ -257,10 +263,16 @@ public abstract class MixinInGameHud {
         return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
     }
 
+    @Inject(method = "renderTitleAndSubtitle", at = @At("HEAD"), cancellable = true)
+    private void hookRenderTitleAndSubtitle(CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.TITLE)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "renderNauseaOverlay", at = @At("HEAD"), cancellable = true)
     private void hookNauseaOverlay(DrawContext context, float distortionStrength, CallbackInfo ci) {
-        var antiBlind = ModuleAntiBlind.INSTANCE;
-        if (antiBlind.getRunning() && antiBlind.getAntiNausea()) {
+        if (!ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             ci.cancel();
         }
     }
