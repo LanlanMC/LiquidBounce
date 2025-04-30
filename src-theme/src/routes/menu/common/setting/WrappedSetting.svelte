@@ -63,7 +63,7 @@
     </div>
 
     {#if expanded && value.value.length > 0}
-        <div class="nested-settings" transition:fade|global={{ duration: 200, easing: quintOut }}>
+        <div class="nested-settings" transition:fade|global={{ duration: 100, easing: quintOut }}>
             {#each value.value as setting, i (setting.name)}
                 <GenericSetting {path} bind:setting={value.value[i]} on:change/>
             {/each}

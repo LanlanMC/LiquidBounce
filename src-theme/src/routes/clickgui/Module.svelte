@@ -100,8 +100,8 @@
         class="module"
         class:expanded
         class:has-settings={configurable?.value.length > 2}
-        in:slide={{ duration: 500, easing: quintOut }}
-        out:slide={{ duration: 500, easing: quintOut }}
+        in:slide={{ duration: 100, easing: quintOut }}
+        out:slide={{ duration: 100, easing: quintOut }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div

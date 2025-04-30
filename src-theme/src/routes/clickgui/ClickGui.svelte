@@ -50,7 +50,7 @@
     });
 </script>
 
-<div class="clickgui" class:grid={$showGrid} transition:fade|global={{duration: 200}}
+<div class="clickgui" class:grid={$showGrid} transition:fade|global={{duration: 100}}
      style="transform: scale({$scaleFactor * 50}%); width: {2 / $scaleFactor * 100}vw; height: {2 / $scaleFactor * 100}vh;
      background-size: {$gridSize}px {$gridSize}px;">
     <Description/>

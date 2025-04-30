@@ -39,7 +39,7 @@
         <img src="img/menu/icon-select-arrow.svg" alt="expand">
     </div>
     {#if expanded}
-        <div class="options" transition:fade|global={{ duration: 200, easing: quintOut }}>
+        <div class="options" transition:fade|global={{ duration: 100, easing: quintOut }}>
             <slot name="options"></slot>
         </div>
     {/if}

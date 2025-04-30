@@ -32,7 +32,7 @@
     <svelte:fragment slot="options">
         {#each options as o}
             <div on:click={() => handleOptionClick(o)} class="option" class:active={values.includes(o)}
-                 transition:slide|global={{ duration: 200, easing: quintOut }}>
+                 transition:slide|global={{ duration: 100, easing: quintOut }}>
                 <span>{o}</span>
             </div>
         {/each}

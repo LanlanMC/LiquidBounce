@@ -2,7 +2,7 @@
     import {fly} from "svelte/transition";
 </script>
 
-<div class="option-bar" transition:fly|global={{duration: 700, x: 1000}}>
+<div class="option-bar" transition:fly|global={{duration: 100, x: 1000}}>
     <slot />
 </div>
 

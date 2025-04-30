@@ -32,7 +32,7 @@
   }
 
   .lds-ripple div:nth-child(2) {
-    animation-delay: -0.5s;
+    animation-delay: -0.1s;
   }
 
   @keyframes lds-ripple {

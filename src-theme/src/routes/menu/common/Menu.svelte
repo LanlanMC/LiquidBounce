@@ -16,7 +16,7 @@
 
 <div class="menu">
     {#if ready}
-        <div transition:fly|global={{duration: 700, y: -100}}>
+        <div transition:fly|global={{duration: 100, y: -100}}>
             <Header/>
         </div>
 

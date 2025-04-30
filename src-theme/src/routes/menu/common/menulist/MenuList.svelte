@@ -31,7 +31,7 @@
     }
 </script>
 
-<div class="menu-list" transition:fly|global={{duration: 700, x: 1000}}>
+<div class="menu-list" transition:fly|global={{duration: 100, x: 1000}}>
     {#if sortable && elementCount > -1}
         <SortableList class="menu-list-items" onSort={handleChange} forceFallback={true} animation={150}>
             <slot/>

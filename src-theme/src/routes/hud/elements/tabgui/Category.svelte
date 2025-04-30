@@ -9,13 +9,13 @@
     <div class="icon">
         {#if selected}
             <img
-                transition:fade={{ duration: 200 }}
+                transition:fade={{ duration: 100 }}
                 src="img/hud/tabgui/{name.toLowerCase()}-active.svg"
                 alt="icon"
             />
         {:else}
             <img
-                transition:fade={{ duration: 200 }}
+                transition:fade={{ duration: 100 }}
                 src="img/hud/tabgui/{name.toLowerCase()}.svg"
                 alt="icon"
             />
