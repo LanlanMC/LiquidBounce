@@ -1,15 +1,14 @@
-<center>
-    <p><img width="200" src="logo.svg" alt="LiquidBounce Logo"></p>
-    <a href="https://liquidbounce.net">liquidbounce.net</a> |
-    <a href="https://forums.ccbluex.net">Forum</a> |
-    <a href="https://youtube.com/CCBlueX">YouTube</a> |
-    <a href="https://twitter.com/CCBlueX">Twitter</a>
-</center>
+<div align="center">
+<p>
+    <img width="200" src="https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/liquidbounceLogo.svg" alt="LiquidBounce Logo">
+</p>
 
-
-LiquidBounce 是一个免费且开源并基于 mixin 的注入黑客客户端，使用 Minecraft 的 Fabric API。
-
-## Issue
+[Website](https://liquidbounce.net) |
+[Forum](https://forums.ccbluex.net) |
+[Discord](https://liquidbounce.net/discord) |
+[YouTube](https://youtube.com/CCBlueX) |
+[X](https://x.com/CCBlueX)
+</div>
 
 如果你注意到任何问题或缺少某些功能，你可以通过在[这里](https://github.com/CCBlueX/LiquidBounce/issues)提交Issue。
 > 这是原仓库的链接，这个仓库只是我的小修改，往我的仓库提Issue大概率不会受理（没空处理）。仅当你确定问题出在原仓库时才提交Issue。
