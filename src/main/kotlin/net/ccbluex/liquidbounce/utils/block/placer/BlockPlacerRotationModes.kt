@@ -109,7 +109,7 @@ class NoRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMode>, 
     /**
      * Not rotating properly allows doing multiple placements. "b/o" stands for blocker per operation.
      */
-    private val placements by int("Placements", 1, 1..10, "b/o")
+    private val placements by int("Placements", 1, 1..50, "b/o")
 
     private var placementsDone = 0
 

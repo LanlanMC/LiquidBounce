@@ -29,7 +29,7 @@
 
         setTimeout(() => {
             expanded = localStorage.getItem(path) === "true"
-        }, 500);
+        }, 33);
     });
 
     highlightModuleName.subscribe((m) => {
@@ -45,7 +45,7 @@
                 behavior: "smooth",
                 block: "center",
             });
-        }, 1000);
+        }, 33);
     });
 
     async function updateModuleSettings() {
@@ -100,8 +100,8 @@
         class="module"
         class:expanded
         class:has-settings={configurable?.value.length > 2}
-        in:slide={{ duration: 100, easing: quintOut }}
-        out:slide={{ duration: 100, easing: quintOut }}
+        in:slide={{ duration: 33, easing: quintOut }}
+        out:slide={{ duration: 33, easing: quintOut }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
