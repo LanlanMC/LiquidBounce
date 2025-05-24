@@ -16,13 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.api.services.cosmetics
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.option;
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.option.ServerList;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-object CapeApi : BaseApi(config.apiEndpointV1) {
-    suspend fun getCape(name: String) =
-        get<NativeImageBackedTexture>("/cape/name/$name")
+import java.util.List;
+
+@Mixin(ServerList.class)
+public interface MixinServerListAccessor {
+    @Accessor("servers")
+    List<ServerInfo> liquid_bounce$getServers();
 }
