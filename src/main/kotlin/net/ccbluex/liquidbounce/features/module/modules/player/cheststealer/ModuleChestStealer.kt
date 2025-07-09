@@ -204,10 +204,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
     /**
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
+     * It will ignore items we don't want, which are defined in [ModuleInventoryCleaner]
      */
     private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = findItemsInContainer(screen)
+                .filter{ slot -> ModuleInventoryCleaner.isUsefulItem(slot.itemStack.item) }
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {

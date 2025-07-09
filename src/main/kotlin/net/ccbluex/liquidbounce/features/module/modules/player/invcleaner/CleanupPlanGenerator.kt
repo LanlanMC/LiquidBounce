@@ -61,6 +61,7 @@ class CleanupPlanGenerator(
             processItemCategory(category, availableItems)
         }
 
+        packer.usefulItems.removeIf { !ModuleInventoryCleaner.isUsefulItem(it.itemStack.item) }
         // We aren't allowed to touch those, so we just consider them as useful.
         packer.usefulItems.addAll(this.template.forbiddenSlots)
 

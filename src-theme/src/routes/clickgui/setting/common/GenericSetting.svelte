@@ -12,6 +12,7 @@
     import ColorSetting from "../ColorSetting.svelte";
     import TextSetting from "../TextSetting.svelte";
     import BlocksSetting from "../blocks/BlocksSetting.svelte";
+    import ItemsSetting from "../items/ItemsSetting.svelte";
     import {slide} from "svelte/transition";
     import {onMount} from "svelte";
     import TextArraySetting from "../TextArraySetting.svelte";
@@ -60,6 +61,8 @@
         <VectorSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "ITEMS"}
+        <ItemsSetting bind:setting={setting} on:change/>
     {:else}
         <div style="color: white">Unsupported setting {setting.valueType}</div>
     {/if}
