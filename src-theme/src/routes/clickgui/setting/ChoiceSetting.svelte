@@ -73,7 +73,7 @@
         padding: 7px 0px;
 
         .head {
-          transition: ease margin-bottom .2s;
+          transition: ease margin-bottom .1s;
 
           &.expand {
               display: grid;

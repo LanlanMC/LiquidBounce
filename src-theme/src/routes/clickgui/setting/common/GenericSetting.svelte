@@ -62,7 +62,7 @@
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "ITEMS"}
-        <ItemsSetting bind:setting={setting} on:change/>
+        <ItemsSetting {path} bind:setting={setting} on:change/>
     {:else}
         <div style="color: white">Unsupported setting {setting.valueType}</div>
     {/if}

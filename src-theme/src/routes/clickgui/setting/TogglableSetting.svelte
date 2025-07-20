@@ -71,7 +71,7 @@
     }
 
     .head {
-        transition: ease margin-bottom .2s;
+        transition: ease margin-bottom .1s;
 
         &.expand {
           display: grid;

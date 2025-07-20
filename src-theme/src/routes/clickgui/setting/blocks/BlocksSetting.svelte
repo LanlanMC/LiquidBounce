@@ -85,7 +85,7 @@
   .head {
     display: flex;
     justify-content: space-between;
-    transition: ease margin-bottom .2s;
+    transition: ease margin-bottom .1s;
 
     &.expanded {
       margin-bottom: 10px;
