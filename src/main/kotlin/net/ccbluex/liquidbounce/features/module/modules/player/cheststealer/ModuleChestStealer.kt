@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.text.Text
 import kotlin.math.ceil
@@ -66,7 +65,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val cleanupPlan = createCleanupPlan(screen)
         val itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
 
-        // Quick swap items in hotbar (i.e. swords), some servers hate them
+        // Quick swap items in hotbar (i.e., swords), some servers hate them
         if (quickSwaps && performQuickSwaps(event, cleanupPlan, screen) != null) {
             return@handler
         }
@@ -85,8 +84,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
             event.schedule(inventoryConstrains, actions,
                 /**
-                 * we prioritize item based on how important it is
-                 * for example we should prioritize armor over apples
+                 * we prioritize item based on how important it is,
+                 * for example, we should prioritize armor over apples
                  */
                 ItemCategorization(listOf()).getItemFacets(slot).maxOf { it.category.type.allocationPriority }
             )
@@ -130,7 +129,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     /**
-     * @param slotsToCollect amount of items we need to take
+     * @param slotsToCollect number of items we need to take
      */
     private fun getStillRequiredSpace(
         cleanupPlan: InventoryCleanupPlan,
@@ -161,7 +160,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
 
     /**
-     * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
+     * WARNING: Due to the remapping, the hotbar swaps are not valid anymore after this function.
      *
      * @return true if the chest stealer should wait for the next tick to continue. null if we didn't do anything
      */
@@ -184,8 +183,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                 inventoryConstrains,
                 ClickInventoryAction.performSwap(screen, hotbarSwap.from, hotbarSwap.to),
                 /**
-                 * we prioritize item based on how important it is
-                 * for example we should prioritize armor over apples
+                 * we prioritize item based on how important it is,
+                 * for example, we should prioritize armor over apples
                  */
                 hotbarSwap.priority
             )
@@ -209,7 +208,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = findItemsInContainer(screen)
-                .filter{ slot -> ModuleInventoryCleaner.isUsefulItem(slot.itemStack.item) }
+                .filter{ slot -> ModuleInventoryCleaner.isUsefulItem(slot.itemStack) }
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {

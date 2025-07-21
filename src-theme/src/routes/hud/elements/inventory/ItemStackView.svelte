@@ -71,7 +71,7 @@
 
   .durability {
     height: 100%;
-    transition: width 150ms;
+    transition: width 100ms;
   }
 
   .count {

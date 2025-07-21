@@ -51,7 +51,7 @@
       color: $menu-text-color;
       font-weight: 600;
       font-size: 16px;
-      transition: ease color 0.2s;
+      transition: ease color 167ms;
       margin-left: 10px;
     }
 

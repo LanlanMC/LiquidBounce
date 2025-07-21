@@ -102,8 +102,8 @@
       background-repeat: no-repeat;
       transform-origin: 50% 50%;
       transform: translateY(-50%) rotate(-90deg);
-      transition: ease opacity 0.2s,
-      ease transform 0.4s;
+      transition: ease opacity 167ms,
+      ease transform 167ms;
     }
   }
 
@@ -124,7 +124,7 @@
       padding: 5px 0;
       cursor: pointer;
       text-align: center;
-      transition: ease color 0.2s;
+      transition: ease color 167ms;
 
       &:hover {
         color: $clickgui-text-color;

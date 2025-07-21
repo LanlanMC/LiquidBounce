@@ -43,7 +43,7 @@
     right: 0;
     bottom: 0;
     background-color: color.adjust($clickgui-text-color, $lightness: -55%);
-    transition: ease 0.4s;
+    transition: ease 167ms;
     height: 8px;
     border-radius: 4px;
 
@@ -55,7 +55,7 @@
       top: -2px;
       left: 0;
       background-color: $clickgui-text-color;
-      transition: ease 0.4s;
+      transition: ease 167ms;
       border-radius: 50%;
     }
   }

@@ -195,7 +195,7 @@
     width: 600px;
     border-radius: 30px;
     overflow: hidden;
-    transition: ease border-radius 0.2s;
+    transition: ease border-radius 167ms;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
     &.has-results {
@@ -216,14 +216,14 @@
     .result {
       font-size: 16px;
       padding: 10px 0;
-      transition: ease padding-left 0.2s;
+      transition: ease padding-left 167ms;
       cursor: pointer;
       display: grid;
       grid-template-columns: max-content 1fr max-content;
 
       .module-name {
         color: $clickgui-text-dimmed-color;
-        transition: ease color 0.2s;
+        transition: ease color 167ms;
       }
 
       &.enabled {

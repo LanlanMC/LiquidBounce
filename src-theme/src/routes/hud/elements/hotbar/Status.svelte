@@ -64,7 +64,7 @@
     border-radius: 5px;
     height: 20px;
     will-change: width;
-    transition: ease width 0.2s;
+    transition: ease width 167ms;
 
     &.align-right {
       margin-left: auto;

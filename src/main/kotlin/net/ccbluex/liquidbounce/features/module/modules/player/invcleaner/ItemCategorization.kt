@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
@@ -79,6 +80,7 @@ enum class ItemType(
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
+    GENERIC(false),
     NONE(false),
 }
 
@@ -97,6 +99,8 @@ enum class ItemSortChoice(
      */
     val satisfactionCheck: Predicate<ItemStack>? = null,
 ) : NamedChoice {
+    KNOCKBACK("Knockback", ItemCategory(ItemType.GENERIC, 0),
+        {it.enchantments.size == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 1 }),
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
@@ -109,11 +113,8 @@ enum class ItemSortChoice(
     LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
     MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
     PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
-    GAPPLE(
-        "Gapple",
-        ItemCategory(ItemType.GAPPLE, 0),
-        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
-    ),
+    GAPPLE("Gapple", ItemCategory(ItemType.GAPPLE, 0), { it.item == Items.GOLDEN_APPLE}),
+    EGAPPLE("God Apple", ItemCategory(ItemType.GAPPLE, 0), {it.item == Items.ENCHANTED_GOLDEN_APPLE }),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),

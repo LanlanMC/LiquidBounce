@@ -289,7 +289,7 @@
         content: "";
         position: absolute;
         background-color: white;
-        transition: transform 0.2s ease-out;
+        transition: transform 167ms ease-out;
         top: 0;
         left: 50%;
         width: 2px;
@@ -301,7 +301,7 @@
         content: "";
         position: absolute;
         background-color: white;
-        transition: transform 0.2s ease-out;
+        transition: transform 167ms ease-out;
         top: 50%;
         left: 0;
         width: 100%;

@@ -22,15 +22,23 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.features.FeatureHeypixelCheck
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.SlotActionType
+import kotlin.collections.filter
 
 /**
  * InventoryCleaner module
@@ -64,7 +72,16 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", hashSetOf())
 
-    fun isUsefulItem(item: Item) = filter(item, items)
+    init{
+        tree(FeatureHeypixelCheck)
+    }
+
+    fun isUsefulItem(item: ItemStack): Boolean{
+        if (FeatureHeypixelCheck.enabled && FeatureHeypixelCheck.isHeypixelUsefulItem(item)) {
+            return true
+        }
+        return filter(item.item, items)
+    }
 
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
         get() {

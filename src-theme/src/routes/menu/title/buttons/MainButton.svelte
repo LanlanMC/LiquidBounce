@@ -66,7 +66,7 @@
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    transition: ease background-color 0.2s;
+    transition: ease background-color 167ms;
     position: relative;
 
     img {

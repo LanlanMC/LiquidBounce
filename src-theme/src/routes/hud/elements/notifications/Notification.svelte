@@ -33,7 +33,7 @@
     background-repeat: no-repeat;
     border-radius: 4px;
     grid-area: a;
-    transition: background-color 0.2s;
+    transition: background-color 167ms;
     position: relative;
     background-image: url("/img/hud/notification/icon-toggle.svg");
 
@@ -63,7 +63,7 @@
         top: 50%;
         transform: translate(-50%, -50%);
         background: white;
-        transition: all 0.2s ease-out;
+        transition: all 167ms ease-out;
       }
     }
 

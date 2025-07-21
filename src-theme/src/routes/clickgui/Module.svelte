@@ -140,8 +140,8 @@
 
     .name {
       cursor: pointer;
-      transition: ease background-color 0.2s,
-      ease color 0.2s;
+      transition: ease background-color 167ms,
+      ease color 167ms;
 
       color: $clickgui-text-dimmed-color;
       text-align: center;
@@ -191,8 +191,8 @@
         opacity: 0.5;
         transform-origin: 50% 50%;
         transform: translateY(-50%) rotate(-90deg);
-        transition: ease opacity 0.2s,
-        ease transform 0.4s;
+        transition: ease opacity 167ms,
+        ease transform 167ms;
       }
 
       &.expanded .name::after {

@@ -37,8 +37,8 @@
             transform-origin: 50% 50%;
             transform: translateY(-50%) rotate(-90deg);
             transition:
-                ease opacity 0.2s,
-                ease transform 0.4s;
+                ease opacity 167ms,
+                ease transform 167ms;
         }
 
         &.expanded::after {

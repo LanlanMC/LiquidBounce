@@ -39,10 +39,10 @@
         color: $tabgui-text-dimmed-color;
         font-size: 12px;
         padding: 6px 15px 6px 10px;
-        transition: ease color 0.2s;
+        transition: ease color 167ms;
 
         .name {
-            transition: ease transform 0.2s;
+            transition: ease transform 167ms;
         }
 
         &.selected {

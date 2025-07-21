@@ -44,7 +44,7 @@
         background-size: 200% 100%;
         background-position: right bottom;
         will-change: background-position;
-        transition: background-position 0.2s ease-out;
+        transition: background-position 167ms ease-out;
         overflow: hidden;
     }
 

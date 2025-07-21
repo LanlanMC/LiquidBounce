@@ -20,6 +20,6 @@
     .thumb {
         height: 8px;
         background-color: $hotbar-health-color;
-        transition: ease width 0.5s;
+        transition: ease width 167ms;
     }
 </style>

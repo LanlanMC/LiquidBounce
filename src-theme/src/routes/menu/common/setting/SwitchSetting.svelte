@@ -38,7 +38,7 @@
     right: 0;
     bottom: 0;
     background-color: color.adjust($menu-text-color, $lightness: -55%);
-    transition: ease 0.4s;
+    transition: ease 167ms;
     height: 14px;
     border-radius: 10px;
 
@@ -50,7 +50,7 @@
       top: -4px;
       left: -10px;
       background-color: $menu-text-color;
-      transition: ease 0.4s;
+      transition: ease 167ms;
       border-radius: 50%;
     }
   }

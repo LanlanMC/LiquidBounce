@@ -48,8 +48,7 @@ import net.minecraft.util.math.Box
 
 /**
  * ChestAura feature
- */
-/**
+ *
  * ChestAura feature is responsible for automatically interacting with storage blocks (such as chests)
  * within a specified range and line of sight of the player.
  */
