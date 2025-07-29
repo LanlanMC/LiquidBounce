@@ -45,7 +45,7 @@ class CleanupPlanGenerator(
     fun generatePlan(): InventoryCleanupPlan {
         val categorizer = ItemCategorization(availableItems)
 
-        // Contains all facets that the available items represent. i.e. if we have an axe in slot 5, this would be
+        // Contains all facets that the available items represent. I.e., if we have an axe in slot 5, this would be
         // (Axe(Slot 5), Weapon(Slot 5)) since the axe can also function as a weapon.
         val itemFacets = availableItems.flatMap { categorizer.getItemFacets(it).asIterable() }
 

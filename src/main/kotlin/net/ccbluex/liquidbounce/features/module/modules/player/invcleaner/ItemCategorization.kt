@@ -49,7 +49,7 @@ enum class ItemType(
     /**
      * Higher priority means the item category is filled in first.
      *
-     * This is important for example for specializations. If we have a weapon slot and an axe slot, an axe would
+     * This is important, for example, for specializations. If we have a weapon slot and an axe slot, an axe would
      * fit in both slots, but because the player specifically requested an axe, the best axe should be filled in first
      * with the best available axe.
      *
@@ -58,12 +58,15 @@ enum class ItemType(
      */
     val allocationPriority: Priority = Priority.NORMAL,
     /**
-     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * The user maybe wants to filter the items by a specific type. But we don't need all versions of the item.
      * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
      * If that function is already served, we can just ignore it.
      */
     val providedFunction: ItemFunction? = null
 ) {
+    KNOCKBACK(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
+    COBWEB(false),
+    FIREBALL(false),
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
@@ -78,6 +81,7 @@ enum class ItemType(
     BUCKET(false),
     PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
+    EGAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
     GENERIC(false),
@@ -93,14 +97,16 @@ enum class ItemSortChoice(
     override val choiceName: String,
     val category: ItemCategory?,
     /**
-     * This is the function that is used for the greedy check.
+     * This is the function used for the greedy check.
      *
      * IF IT WAS IMPLEMENTED
      */
     val satisfactionCheck: Predicate<ItemStack>? = null,
 ) : NamedChoice {
-    KNOCKBACK("Knockback", ItemCategory(ItemType.GENERIC, 0),
-        {it.enchantments.size == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 1 }),
+    KNOCKBACK("Knockback", ItemCategory(ItemType.KNOCKBACK, 0),
+        {it.enchantments.size == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 2 }),
+    COBWEB("Cobweb", ItemCategory(ItemType.COBWEB, 0), {it.item == Items.COBWEB}),
+    FIREBALL("Fireball", ItemCategory(ItemType.FIREBALL, 0), {it.item == Items.FIRE_CHARGE}),
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
@@ -124,7 +130,7 @@ enum class ItemSortChoice(
 }
 
 /**
- * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)
+ * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)?
  */
 class ItemCategorization(
     availableItems: List<ItemSlot>,
@@ -150,7 +156,7 @@ class ItemCategorization(
     /**
      * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
      * the best ones as soon as we upgrade one of the other armor pieces.
-     * In those cases we don't want to miss out on this armor piece in the future thus we keep it.
+     * In those cases, we don't want to miss out on this armor piece in the future, thus we keep it.
      */
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
@@ -171,7 +177,7 @@ class ItemCategorization(
     }
 
     /**
-     * Returns a list of facets an item represents. For example an axe is an axe, but also a sword:
+     * Returns a list of facets an item represents. For example, an axe is an axe, but also a sword:
      * - (SANDSTONE_BLOCK, 64) => `[Block(SANDSTONE_BLOCK, 64)]`
      * - (DIAMOND_AXE, 1) => `[Axe(DIAMOND_AXE, 1), Tool(DIAMOND_AXE, 1)]`
      */
@@ -192,6 +198,7 @@ class ItemCategorization(
             is MiningToolItem -> arrayOf(MiningToolItemFacet(slot))
             is FishingRodItem -> arrayOf(RodItemFacet(slot))
             is ShieldItem -> arrayOf(ShieldItemFacet(slot))
+            Items.COBWEB -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.COBWEB, 0)))
             is BlockItem -> {
                 if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
                     && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
@@ -230,20 +237,23 @@ class ItemCategorization(
             Items.ENCHANTED_GOLDEN_APPLE -> {
                 arrayOf(
                     FoodItemFacet(slot),
-                    PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
+                    PrimitiveItemFacet(slot, ItemCategory(ItemType.EGAPPLE, 0), 1),
                 )
             }
+            Items.FIRE_CHARGE -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.FIREBALL, 0)))
             Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> arrayOf(ThrowableItemFacet(slot))
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))
+                } else if (ItemSortChoice.KNOCKBACK.satisfactionCheck?.test(slot.itemStack) == true){
+                    arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.KNOCKBACK, 0)))
                 } else {
                     arrayOf(ItemFacet(slot))
                 }
             }
         }
 
-        // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
+        // Everything could be a weapon (i.e., a stick with Knockback II should be considered a weapon)
         return specificItemFacets + WeaponItemFacet(slot)
     }
 }
