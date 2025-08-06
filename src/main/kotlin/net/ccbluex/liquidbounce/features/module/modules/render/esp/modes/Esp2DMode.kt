@@ -97,12 +97,11 @@ object Esp2DMode : EspMode("2D") {
                 var rectWidth = (maxX - minX)
                 var rectHeight = (maxY - minY)
 
-                with(newDrawContext()) {
                 val guiScaleFactor = mc.options.guiScale.value
                 val outlineThickness = Outline.thickness.toFloat() / guiScaleFactor
                 val borderThickness = Border.thickness.toFloat() / guiScaleFactor
 
-                with(DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)) {
+                with(newDrawContext()) {
                     with(matrices) {
                         translate(minX, minY, minZ)
 
@@ -178,5 +177,4 @@ object Esp2DMode : EspMode("2D") {
             }
         }
     }
-
 }
