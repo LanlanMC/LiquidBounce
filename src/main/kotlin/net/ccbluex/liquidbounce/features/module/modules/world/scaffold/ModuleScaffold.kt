@@ -225,6 +225,11 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
      */
     val autoSpeed by boolean("AutoSpeed", false)
 
+    /**
+     *  Applies the sprint FOV even when the player is not sprinting.
+     */
+    val fakeSprint by boolean("FakeSprint", false)
+
     private var ledge by boolean("Ledge", true)
 
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
@@ -248,7 +253,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     val isBlockBelow: Boolean
         get() {
             // Check if there is a collision box below the player
-            // In this case we expand the bounding box by 0.5 in all directions and check if there is a collision
+            // In this case, we expand the bounding box by 0.5 in all directions and check if there is a collision
             // This might cause for "Spider-like" behavior, but it's the most reliable way to check
             // and usually the scaffold should start placing blocks
             return world.getBlockCollisions(

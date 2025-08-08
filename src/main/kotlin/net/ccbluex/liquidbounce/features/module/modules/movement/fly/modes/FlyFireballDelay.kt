@@ -55,6 +55,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.glfw.GLFW
 import java.util.concurrent.LinkedBlockingQueue
 import java.lang.String
@@ -140,11 +141,12 @@ internal object FlyFireballDelay : Choice("FireballDelay") {
         var c0fId = -1
         var lastId = -1
         var packet = packets.take()
+
+        fun isVelocityNonZero(velocity: Vec3d) = velocity.x != 0.0 || velocity.y != 0.0 || velocity.z != 0.0
+
         while (!(packet is EntityVelocityUpdateS2CPacket
                 || (packet is ExplosionS2CPacket
-                && (packet.playerKnockback.get().x != 0.0
-                 || packet.playerKnockback.get().y != 0.0
-                 || packet.playerKnockback.get().z != 0.0)))
+                && (isVelocityNonZero(packet.playerKnockback.get()))))
         ) {
             if (packet is CommonPongC2SPacket) {
                 val newId = packet.parameter

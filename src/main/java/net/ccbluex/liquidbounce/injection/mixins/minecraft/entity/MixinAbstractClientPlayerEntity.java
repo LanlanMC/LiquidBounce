@@ -19,9 +19,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -37,4 +41,17 @@ public abstract class MixinAbstractClientPlayerEntity {
         return original;
     }
 
+    @ModifyExpressionValue(method = "getFovMultiplier", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"), remap = false)
+    private double hookGetAttributeValue(double original) {
+        if (!ModuleScaffold.INSTANCE.getRunning() || !ModuleScaffold.INSTANCE.getFakeSprint()) return original;
+
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player == null) return original;
+        if (MinecraftClient.getInstance().options.forwardKey.isPressed() && !player.isSprinting()) {
+            // If the player is sprinting, we don't want to modify the FOV
+            return original * 1.3;
+        }
+
+        return original;
+    }
 }
