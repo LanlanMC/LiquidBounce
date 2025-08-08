@@ -724,5 +724,6 @@
   "liquidbounce.module.betterTitle.description": "Improvements to the title and subtitle.",
   "liquidbounce.module.autoPearl.description": "Aims and throws a pearl at an enemies pearl trajectory.",
   "liquidbounce.module.replenish.description": "Automatically refills your hotbar with items from your inventory when the count drops to a certain threshold.",
-  "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP."
+  "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP.",
+  "liquidbounce.module.sidePlace.description": "Automatically places blocks on the sides of other blocks."
 }

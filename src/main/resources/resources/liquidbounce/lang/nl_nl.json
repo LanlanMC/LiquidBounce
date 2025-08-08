@@ -646,5 +646,6 @@
     "liquidbounce.module.betterTab.description": "Diverse verbeteringen aan de tablijst.",
     "liquidbounce.module.autoPearl.description": "Richt en werpt een enderparel in de baan van de enderparel van de vijand.",
     "liquidbounce.module.replenish.description": "Vult automatisch je hotbar bij vanuit je inventaris als het aantal te laag wordt.",
-    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP."
+    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP.",
+  "liquidbounce.module.sidePlace.description": "Zet automatisch blokken naast blokken neer"
 }
