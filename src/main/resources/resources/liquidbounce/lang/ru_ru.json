@@ -701,5 +701,6 @@
   "liquidbounce.scripts.debug.inspect.url": "Нажмите, чтобы скопировать URL отладчика и вставьте его в браузер (к сожалению, работают только браузеры на основе Chromium).",
   "liquidbounce.scripts.debug.support": "Скрипт %s настроен на запуск с поддержкой отладчика на: ",
   "liquidbounce.tooltip.clickToCopy": "Кликни для копирования",
-  "liquidbounce.unsupportedDeepLearning": "❌ Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается."
+  "liquidbounce.unsupportedDeepLearning": "❌ Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается.",
+  "liquidbounce.module.sidePlace.description": "Автоматическое размещение блоков по бокам блоков"
 }

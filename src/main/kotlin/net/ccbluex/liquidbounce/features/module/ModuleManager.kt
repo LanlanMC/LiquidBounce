@@ -408,6 +408,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
+            ModuleSidePlace,
 
             // Client
             ModuleAutoConfig,
