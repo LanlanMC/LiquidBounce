@@ -41,7 +41,7 @@ public abstract class MixinAbstractClientPlayerEntity {
         return original;
     }
 
-    @ModifyExpressionValue(method = "getFovMultiplier", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"), remap = false)
+    @ModifyExpressionValue(method = "getFovMultiplier", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
     private double hookGetAttributeValue(double original) {
         if (!ModuleScaffold.INSTANCE.getRunning() || !ModuleScaffold.INSTANCE.getFakeSprint()) return original;
 
