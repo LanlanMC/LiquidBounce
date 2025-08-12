@@ -65,7 +65,7 @@ object ModuleSidePlace: ClientModule("SidePlace", Category.WORLD) {
 
     private var placeCooldown = 0
 
-    override fun disable() {
+    fun disable() {
         placeCooldown = 0
     }
 
@@ -84,7 +84,7 @@ object ModuleSidePlace: ClientModule("SidePlace", Category.WORLD) {
         if (stopOnLeftClick && mc.options.attackKey.isPressed) return@tickHandler  //  left-click
         if (holdRight && !mc.options.useKey.isPressed) return@tickHandler  //  right-click
 
-        val raycastResult = raycast(player.rotation)
+        val raycastResult = raycast()
         if (raycastResult.type != HitResult.Type.BLOCK) return@tickHandler  // Ensure the player is looking at a block
         if (raycastResult.side in arrayOf(Direction.UP, Direction.DOWN)) return@tickHandler  // Sides only
 
