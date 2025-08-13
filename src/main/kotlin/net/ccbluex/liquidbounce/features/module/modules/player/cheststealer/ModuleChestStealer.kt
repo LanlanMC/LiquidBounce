@@ -202,8 +202,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     /**
-     * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
-     * It will ignore items we don't want, which are defined in [ModuleInventoryCleaner]
+     * Either asks [ModuleInventoryCleaner] what to do or just takes everything, while
+     *  ignoring items we don't want, which are defined in [ModuleInventoryCleaner]
      */
     private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
