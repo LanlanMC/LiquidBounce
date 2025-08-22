@@ -49,6 +49,7 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
             NoFallHypixelPacket,
             NoFallHypixel,
             NoFallBlocksMC,
+            NoFallGrim2371,
             NoFallGrim
         )
     ).apply(::tagBy)

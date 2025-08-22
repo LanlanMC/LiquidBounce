@@ -140,8 +140,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         eventMotion = new PlayerNetworkMovementTickEvent(EventState.PRE, player.getX(), player.getY(), player.getZ(), player.isOnGround());
         EventManager.INSTANCE.callEvent(eventMotion);
 
-        if (eventMotion.isCancelled())
+        if (eventMotion.isCancelled()) {
             callbackInfo.cancel();
+        }
     }
 
     @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getX()D"))
