@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.fill
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -101,8 +100,9 @@ object Esp2DMode : EspMode("2D") {
                 val outlineThickness = Outline.thickness.toFloat() / guiScaleFactor
                 val borderThickness = Border.thickness.toFloat() / guiScaleFactor
 
-                with(newDrawContext()) {
+                with(event.context) {
                     with(matrices) {
+                        push()
                         translate(minX, minY, minZ)
 
                         if (fill) {
@@ -172,9 +172,11 @@ object Esp2DMode : EspMode("2D") {
                                 rectHeight - healthHeight - outlineThickness / 2,
                                 rectHeight + outlineThickness / 2, outlineThickness, healthColor)
                         }
+                        pop()
                     }
                 }
             }
         }
     }
+
 }

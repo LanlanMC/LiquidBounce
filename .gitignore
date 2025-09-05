@@ -11,4 +11,4 @@
 /mcef/
 /logs/
 /.kotlin/
-/.run/
+.DS_Store

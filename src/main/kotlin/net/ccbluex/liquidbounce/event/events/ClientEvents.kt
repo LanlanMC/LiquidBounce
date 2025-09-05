@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
@@ -147,14 +147,8 @@ class AccountManagerAdditionResultEvent(
 @Nameable("accountManagerRemoval")
 class AccountManagerRemovalResultEvent(val username: String?) : Event(), WebSocketEvent
 
-@Nameable("proxyAdditionResult")
-class ProxyAdditionResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
-
 @Nameable("proxyCheckResult")
-class ProxyCheckResultEvent(val proxy: Proxy, val error: String? = null) : Event(), WebSocketEvent
-
-@Nameable("proxyEditResult")
-class ProxyEditResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
+class ProxyCheckResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
 
 @Nameable("browserReady")
 object BrowserReadyEvent : Event()
@@ -180,7 +174,7 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-class ComponentsUpdate(val components: List<Component>) : Event(), WebSocketEvent {
+class ComponentsUpdate(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 
@@ -201,7 +195,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         action: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        schedule.add(InventoryActionChain(constrains, arrayOf(action), priority))
+        schedule.add(InventoryActionChain(constrains, listOf(action), priority))
     }
 
     fun schedule(
@@ -209,7 +203,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         vararg actions: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions, priority))
+        this.schedule.add(InventoryActionChain(constrains, actions.asList(), priority))
     }
 
     fun schedule(
@@ -217,7 +211,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         actions: List<InventoryAction>,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray(), priority))
+        this.schedule.add(InventoryActionChain(constrains, actions, priority))
     }
 }
 
