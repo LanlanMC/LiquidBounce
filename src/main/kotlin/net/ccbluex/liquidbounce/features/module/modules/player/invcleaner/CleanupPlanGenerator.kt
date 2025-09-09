@@ -19,22 +19,24 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.minecraft.item.ItemStack
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
     private val availableItems: List<ItemSlot>,
-) : ItemPacker.ItemAmountContraintProvider {
+) : ItemPacker.ItemAmountConstraintProvider {
     private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
 
     private val packer = ItemPacker()
 
-    private val currentLimit = HashMap<ItemNumberContraintGroup, Int>()
+    private val currentLimit = HashMap<ItemNumberConstraintGroup, Int>()
 
     // TODO Implement greedy check
     /**
-     * Keeps track of where a specific type of item should be placed. e.g. BLOCK -> [Hotbar 7, Hotbar 8]
+     * keeps track of where a specific type of item should be placed. e.g., BLOCK -> [Hotbar 7, Hotbar 8]
      */
     private val categoryToSlotsMap: Map<ItemCategory, List<ItemSlot>> =
         template.slotContentMap.entries
@@ -61,6 +63,21 @@ class CleanupPlanGenerator(
             processItemCategory(category, availableItems)
         }
 
+        // Remove items that exceed the constraints.
+        packer.usefulItems.removeIf {
+            val constraints = this.template.itemAmountConstraintProvider(ItemFacet(it))
+
+//            return@removeIf constraints.any {
+//                constraintInfo -> (this.currentLimit[constraintInfo.group] ?: 0) >=
+//                        constraintInfo.group.acceptableRange.last
+//            }
+            val currentItemAmount = player.inventory.count(it.itemStack.item)
+
+            return@removeIf constraints.any {
+                constraintInfo -> currentItemAmount >= constraintInfo.group.acceptableRange.last
+            }
+        }
+        // Remove useless items from the packer.
         packer.usefulItems.removeIf { !ModuleInventoryCleaner.isUsefulItem(it.itemStack) }
         // We aren't allowed to touch those, so we just consider them as useful.
         packer.usefulItems.addAll(this.template.forbiddenSlots)
@@ -71,6 +88,15 @@ class CleanupPlanGenerator(
             mergeableItems = groupItemsByType(),
         )
     }
+
+//    private fun getCurrentItemAmount(item: ItemStack) : Int {
+//        var amount = 0
+//
+//        // Count the item in player's inventory
+//        amount += player.inventory.count(item.item)
+//
+//        return amount
+//    }
 
     private fun processItemCategory(
         category: ItemCategory,
@@ -88,7 +114,7 @@ class CleanupPlanGenerator(
             this.packer.packItems(
                 itemsToFillIn = prioritizedItemList,
                 hotbarSlotsToFill = hotbarSlotsToFill,
-                contraintProvider = this,
+                constraintProvider = this,
                 forbiddenSlots = this.template.forbiddenSlots,
                 forbiddenSlotsToFill = this.template.forbiddenSlotsToFill
             )
@@ -118,7 +144,7 @@ class CleanupPlanGenerator(
         return itemsByType
     }
 
-    override fun getSatisfactionStatus(item: ItemFacet): ItemPacker.ItemAmountContraintProvider.SatisfactionStatus {
+    override fun getSatisfactionStatus(item: ItemFacet): ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus {
         val constraints = this.template.itemAmountConstraintProvider(item)
 
         constraints.sortBy { it.group.priority }
@@ -127,13 +153,13 @@ class CleanupPlanGenerator(
             val currentCount = this.currentLimit[constraintInfo.group] ?: 0
 
             if (currentCount > constraintInfo.group.acceptableRange.last) {
-                return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.OVERSATURATED
+                return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
             } else if (currentCount < constraintInfo.group.acceptableRange.first) {
-                return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.NOT_SATISFIED
+                return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.NOT_SATISFIED
             }
         }
 
-        return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.SATISFIED
+        return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.SATISFIED
     }
 
     override fun addItem(item: ItemFacet) {
@@ -154,11 +180,11 @@ class CleanupPlanPlacementTemplate(
     val slotContentMap: Map<ItemSlot, ItemSortChoice>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
-     * the given constraint. More info on how constraints work at [ItemNumberContraintGroup].
+     * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
      */
     val itemAmountConstraintProvider: (ItemFacet) -> ArrayList<ItemConstraintInfo>,
     /**
-     * If false, slots which also contains items of that category, those items are not replaced with other items.
+     * If false, slots that also contain items of that category, those items are not replaced with other items.
      */
     val isGreedy: Boolean,
     val forbiddenSlots: Set<ItemSlot>,

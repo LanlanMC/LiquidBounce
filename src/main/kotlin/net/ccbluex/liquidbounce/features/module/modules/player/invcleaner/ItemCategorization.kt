@@ -78,7 +78,7 @@ enum class ItemType(
     THROWABLE(false),
     SHIELD(true),
     FOOD(false),
-    BUCKET(false),
+    BUCKET(true),  // TODO: More specific category?
     PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     EGAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),

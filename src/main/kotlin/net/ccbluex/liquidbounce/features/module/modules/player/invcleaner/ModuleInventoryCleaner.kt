@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.featur
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.collection.Filter
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
@@ -37,8 +36,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.minecraft.item.ItemStack
-import net.minecraft.screen.slot.SlotActionType
-import kotlin.collections.filter
 
 /**
  * InventoryCleaner module
