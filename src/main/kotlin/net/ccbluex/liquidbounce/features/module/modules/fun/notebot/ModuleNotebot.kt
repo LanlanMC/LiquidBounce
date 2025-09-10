@@ -54,7 +54,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     private val song = file("Song") // , supportedExtensions = setOf("nbs")
     private val pianoOnly by boolean("PianoOnly", false)
     val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
-    val range by float("Range", 6f, 1f..6f)
+    val range by float("Range", 6f, 1f..16f)
     val rotationsConfigurable = RotationsConfigurable(this)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
