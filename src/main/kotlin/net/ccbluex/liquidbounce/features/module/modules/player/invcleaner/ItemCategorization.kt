@@ -124,10 +124,13 @@ enum class ItemSortChoice(
     GAPPLE(
         "Gapple",
         ItemCategory(ItemType.GAPPLE, 0),
-        Predicate { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
+        { it.item == Items.GOLDEN_APPLE}
     ),
-    GAPPLE("Gapple", ItemCategory(ItemType.GAPPLE, 0), { it.item == Items.GOLDEN_APPLE}),
-    EGAPPLE("God Apple", ItemCategory(ItemType.GAPPLE, 0), {it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+    EGAPPLE(
+        "God Apple",
+        ItemCategory(ItemType.EGAPPLE, 0),
+        Predicate {it.item == Items.ENCHANTED_GOLDEN_APPLE }
+    ),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
@@ -195,27 +198,6 @@ class ItemCategorization(
             return emptyList()
         }
 
-        val specificItemFacets: List<ItemFacet> = when (val item = slot.itemStack.item) {
-            // Treat animal armor as a normal item
-            is AnimalArmorItem -> listOf(ItemFacet(slot))
-            is ArmorItem -> listOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
-            is SwordItem -> listOf(SwordItemFacet(slot))
-            is BowItem -> listOf(BowItemFacet(slot))
-            is CrossbowItem -> listOf(CrossbowItemFacet(slot))
-            is ArrowItem -> listOf(ArrowItemFacet(slot))
-            is MiningToolItem -> listOf(MiningToolItemFacet(slot))
-            is FishingRodItem -> listOf(RodItemFacet(slot))
-            is ShieldItem -> listOf(ShieldItemFacet(slot))
-            Items.COBWEB -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.COBWEB, 0)))
-            is BlockItem -> {
-                if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
-                    && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
-                ) {
-                    listOf(BlockItemFacet(slot))
-                } else {
-                    listOf(ItemFacet(slot))
-                }
-            }
         return buildList {
             // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
             add(WeaponItemFacet(slot))
@@ -228,6 +210,7 @@ class ItemCategorization(
                 is ArrowItem -> add(ArrowItemFacet(slot))
                 is FishingRodItem -> add(RodItemFacet(slot))
                 is ShieldItem -> add(ShieldItemFacet(slot))
+                Items.COBWEB -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.COBWEB, 0)))
                 is BlockItem -> {
                     if (ScaffoldBlockItemSelection.isValidBlock(itemStack)
                         && !ScaffoldBlockItemSelection.isBlockUnfavourable(itemStack)
@@ -258,43 +241,20 @@ class ItemCategorization(
                     }
                 }
 
-            is EnderPearlItem -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
+            is EnderPearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
             Items.GOLDEN_APPLE -> {
-                listOf(
-                    FoodItemFacet(slot),
-                    PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)),
-                )
+                add(FoodItemFacet(slot))
+                add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)))
             }
+
             Items.ENCHANTED_GOLDEN_APPLE -> {
-                listOf(
-                    FoodItemFacet(slot),
-                    PrimitiveItemFacet(slot, ItemCategory(ItemType.EGAPPLE, 0), 1),
-                )
+                add(FoodItemFacet(slot))
+                add(PrimitiveItemFacet(slot, ItemCategory(ItemType.EGAPPLE, 0), 1))
             }
-                is EnderPearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
-
-                Items.GOLDEN_APPLE -> {
-                    add(FoodItemFacet(slot))
-                    add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)))
-                }
-
-                Items.ENCHANTED_GOLDEN_APPLE -> {
-                    add(FoodItemFacet(slot))
-                    add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1))
-                }
 
             Items.FIRE_CHARGE -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.FIREBALL, 0)))
             Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> listOf(ThrowableItemFacet(slot))
-            else -> {
-                if (slot.itemStack.isFood) {
-                    listOf(FoodItemFacet(slot))
-                } else if (ItemSortChoice.KNOCKBACK.satisfactionCheck?.test(slot.itemStack) == true) {
-                    listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.KNOCKBACK, 0)))
-                } else {
-                    listOf(ItemFacet(slot))
-                Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> add(ThrowableItemFacet(slot))
-
-                else -> when {
+            else -> when {
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))
@@ -303,13 +263,13 @@ class ItemCategorization(
 
                     itemStack.isFood -> add(FoodItemFacet(slot))
 
-                    else -> add(ItemFacet(slot))
+                    else -> if (ItemSortChoice.KNOCKBACK.satisfactionCheck?.test(slot.itemStack) == true) {
+                        add(PrimitiveItemFacet(slot, ItemCategory(ItemType.KNOCKBACK, 0)))
+                    } else {
+                        add(ItemFacet(slot))
+                    }
                 }
             }
-
         }
-
-        // Everything could be a weapon (i.e., a stick with Knockback II should be considered a weapon)
-        return specificItemFacets + WeaponItemFacet(slot)
     }
 }
