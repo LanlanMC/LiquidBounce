@@ -45,12 +45,13 @@ import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
+import java.util.function.ToIntFunction
 import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
 open class Configurable(
     name: String,
-    value: MutableList<Value<*>> = mutableListOf(),
+    value: MutableCollection<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE,
 
     /**
@@ -66,7 +67,7 @@ open class Configurable(
      * Used for backwards compatibility when renaming.
      */
     aliases: Array<out String> = emptyArray(),
-) : Value<MutableList<Value<*>>>(
+) : Value<MutableCollection<Value<*>>>(
     name,
     aliases,
     defaultValue = value,
@@ -390,7 +391,7 @@ open class Configurable(
     protected fun <T : Choice> choices(
         eventListener: EventListener,
         name: String,
-        activeCallback: (List<T>) -> Int,
+        activeCallback: ToIntFunction<List<T>>,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ): ChoiceConfigurable<T> {
         return ChoiceConfigurable(eventListener, name, activeCallback, choicesCallback).apply {
