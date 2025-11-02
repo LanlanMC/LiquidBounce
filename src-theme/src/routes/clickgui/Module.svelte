@@ -8,7 +8,7 @@
     import type {ConfigurableSetting} from "../../integration/types";
     import GenericSetting from "./setting/common/GenericSetting.svelte";
     import {slide} from "svelte/transition";
-    import {quintOut} from "svelte/easing";
+    import {expoOut} from "svelte/easing";
     import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
@@ -106,8 +106,8 @@
         class="module"
         class:expanded
         class:has-settings={hasSettings}
-        in:slide={{ duration: 500, easing: quintOut }}
-        out:slide={{ duration: 500, easing: quintOut }}
+        in:slide={{ duration: 183, easing: expoOut }}
+        out:slide={{ duration: 183, easing: expoOut }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div

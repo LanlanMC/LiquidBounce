@@ -1,7 +1,7 @@
 <script lang="ts">
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
-    import {backIn, backOut} from "svelte/easing";
+    import {expoIn, expoOut} from "svelte/easing";
 
     export let title: string;
     export let icon: string;
@@ -15,13 +15,13 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="main-button" on:mouseenter={() => hovered = true} on:mouseleave={() => hovered = false} on:click={() => hovered = false}
-     on:click={() => dispatch("click")} out:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backIn}}
-     in:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backOut}}>
+     on:click={() => dispatch("click")} out:fly|global={{duration: 183, x: -500, delay: index * 50, easing: expoIn}}
+     in:fly|global={{duration: 183, x: -500, delay: index * 50, easing: expoOut}}>
     <div class="icon">
         {#if !hovered}
-            <img transition:fade={{duration: 200}} src="img/menu/icon-{icon}.svg" alt={icon}>
+            <img transition:fade={{duration: 83}} src="img/menu/icon-{icon}.svg" alt={icon}>
         {:else}
-            <img transition:fade={{duration: 200}} src="img/menu/icon-{icon}-hover.svg" alt={icon}>
+            <img transition:fade={{duration: 83}} src="img/menu/icon-{icon}-hover.svg" alt={icon}>
         {/if}
     </div>
 

@@ -14,8 +14,8 @@
 </script>
 
 {#if visible}
-    <div class="modal-wrapper" transition:fade|global={{duration: 200}}>
-        <div class="modal" in:fly|global={{duration: 300, y: -100}} out:fly|global={{duration: 300, y: -100}}>
+    <div class="modal-wrapper" transition:fade|global={{duration: 83}}>
+        <div class="modal" in:fly|global={{duration: 183, y: -100}} out:fly|global={{duration: 183, y: -100}}>
             <button class="button-modal-close" on:click={handleClick}>
                 <img src="img/menu/icon-close.svg" alt="close">
             </button>

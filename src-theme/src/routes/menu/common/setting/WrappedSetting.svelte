@@ -3,7 +3,7 @@
     import {fade} from "svelte/transition";
     import SwitchSetting from "./SwitchSetting.svelte";
     import GenericSetting from "../../../clickgui/setting/common/GenericSetting.svelte";
-    import {quintOut} from "svelte/easing";
+    import {expoOut} from "svelte/easing";
     import {convertToSpacedString} from "../../../../theme/theme_config";
 
     interface Props {
@@ -65,7 +65,7 @@
     </div>
 
     {#if expanded && value.value.length > 0}
-        <div class="nested-settings" transition:fade|global={{ duration: 200, easing: quintOut }}>
+        <div class="nested-settings" transition:fade|global={{ duration: 83, easing: expoOut }}>
             {#each value.value as setting, i (setting.name)}
                 <GenericSetting {path} bind:setting={value.value[i]} on:change/>
             {/each}

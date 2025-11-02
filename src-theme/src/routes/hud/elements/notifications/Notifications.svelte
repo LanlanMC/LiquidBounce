@@ -50,9 +50,9 @@
 <div class="notifications">
     {#each notifications as {title, message, severity, animationKey} (animationKey)}
         <div
-                animate:flip={{ duration: 200 }}
-                in:fly={{ x: 30, duration: 200 }}
-                out:fly={{ x: 30, duration: 200 }}
+                animate:flip={{ duration: 83 }}
+                in:fly={{ x: 30, duration: 83 }}
+                out:fly={{ x: 30, duration: 83 }}
         >
             <Notification {title} {message} {severity}/>
         </div>

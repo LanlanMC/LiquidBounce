@@ -21,7 +21,7 @@
 
 <div bind:this={element}>
     {#if shown}
-        <div transition:fly="{{ y: -10, duration: 200 }}" class="tooltip" style="background-color: {color};">{text}</div>
+        <div transition:fly="{{ y: -10, duration: 83 }}" class="tooltip" style="background-color: {color};">{text}</div>
     {/if}
 </div>
 

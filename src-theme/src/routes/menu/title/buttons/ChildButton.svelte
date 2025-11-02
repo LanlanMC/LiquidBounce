@@ -17,9 +17,9 @@
 
     <div class="icon">
         {#if parentHovered}
-            <img transition:fade="{{ duration: 200 }}" src="img/menu/icon-{icon}-hover.svg" alt={title}>
+            <img transition:fade="{{ duration: 83 }}" src="img/menu/icon-{icon}-hover.svg" alt={title}>
         {:else}
-            <img transition:fade="{{ duration: 200 }}" src="img/menu/icon-{icon}.svg" alt={title}>
+            <img transition:fade="{{ duration: 83 }}" src="img/menu/icon-{icon}.svg" alt={title}>
         {/if}
     </div>
 

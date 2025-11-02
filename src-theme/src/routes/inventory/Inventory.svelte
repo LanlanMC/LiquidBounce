@@ -3,7 +3,7 @@
 </script>
 
 <img class="watermark" src="img/lb-logo.svg" alt="watermark"
-     in:fade={{ duration: 100 }} out:fade={{ duration: 100 }}>
+     in:fade={{ duration: 50 }} out:fade={{ duration: 50 }}>
 
 <style>
     .watermark {

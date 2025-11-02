@@ -49,7 +49,7 @@
         <ExpandArrow bind:expanded/>
     </div>
     {#if expanded}
-        <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
+        <div in:slide|global={{duration: 83, axis: "y"}} out:slide|global={{duration: 83, axis: "y"}}>
             <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
             <div class="results">
                 <VirtualList items={renderedItems} let:item>

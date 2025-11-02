@@ -11,7 +11,7 @@
     import {onMount} from "svelte";
     import {listen} from "../../../../../integration/ws";
     import {location} from "svelte-spa-router";
-    import {quintOut} from "svelte/easing";
+    import {expoOut} from "svelte/easing";
     import {fade, slide} from "svelte/transition";
     import type {Account} from "../../../../../integration/types";
     import Avatar from "./Avatar.svelte";
@@ -105,11 +105,11 @@
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
         {#if $isLoggingIn}
-            <div class="avatar" transition:fade={{ duration: 200 }}>
+            <div class="avatar" transition:fade={{ duration: 83 }}>
                 <RippleLoader size={68} />
             </div>
         {:else}
-            <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 200, delay: 200 }}>
+            <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 83, delay: 83 }}>
                 <img src="img/steve.png" alt=avatar class="avatar">
             </object>
         {/if}
@@ -137,7 +137,7 @@
     </div>
 
     {#if expanded}
-        <div class="quick-switcher" transition:fade|global={{ duration: 200, easing: quintOut }}>
+        <div class="quick-switcher" transition:fade|global={{ duration: 83, easing: expoOut }}>
             <!-- svelte-ignore a11y_autofocus -->
             <input type="text" autofocus class="account-search" placeholder="Search..." bind:value={searchQuery}>
 
@@ -146,7 +146,7 @@
                     <div class="account-list">
                         {#each renderedAccounts as a}
                             <div on:click={() => login(a)} class="account-item"
-                                 transition:slide|global={{ duration: 200, easing: quintOut }}
+                                 transition:slide|global={{ duration: 83, easing: expoOut }}
                                  class:active={a.username === username}>
                                 <Avatar url={a.avatar}/>
                                 <div class="username">{a.username}</div>
