@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
 class CleanupPlanGenerator(
@@ -61,6 +62,22 @@ class CleanupPlanGenerator(
             processItemCategory(category, availableItems)
         }
 
+        // Remove items that exceed the constraints.
+        packer.usefulItems.removeIf {
+            val constraints = this.template.itemAmountConstraintProvider(ItemFacet(it))
+
+//            return@removeIf constraints.any {
+//                constraintInfo -> (this.currentLimit[constraintInfo.group] ?: 0) >=
+//                        constraintInfo.group.acceptableRange.last
+//            }
+            val currentItemAmount = player.inventory.count(it.itemStack.item)
+
+            return@removeIf constraints.any {
+                constraintInfo -> currentItemAmount >= constraintInfo.group.acceptableRange.last
+            }
+        }
+        // Remove useless items from the packer.
+        packer.usefulItems.removeIf { !ModuleInventoryCleaner.isUsefulItem(it.itemStack) }
         // We aren't allowed to touch those, so we just consider them as useful.
         packer.usefulItems.addAll(this.template.forbiddenSlots)
 

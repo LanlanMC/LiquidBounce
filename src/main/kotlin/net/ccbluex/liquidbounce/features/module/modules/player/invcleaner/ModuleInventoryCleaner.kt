@@ -24,11 +24,14 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.features.FeatureHeypixelCheck
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
+import net.minecraft.item.ItemStack
 
 /**
  * InventoryCleaner module
@@ -58,6 +61,20 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
     private val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD)
     private val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK)
     private val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK)
+
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val items by items("Items", hashSetOf())
+
+    init {
+        tree(FeatureHeypixelCheck)
+    }
+
+    fun isUsefulItem(item: ItemStack): Boolean{
+        if (FeatureHeypixelCheck.enabled && FeatureHeypixelCheck.isHeypixelUsefulItem(item)) {
+            return true
+        }
+        return filter(item.item, items)
+    }
 
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
         get() {

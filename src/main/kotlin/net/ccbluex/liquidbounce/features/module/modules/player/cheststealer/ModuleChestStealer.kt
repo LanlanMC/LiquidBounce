@@ -280,6 +280,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun createCleanupPlan(screen: HandledScreen<*>): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
+                .filter { slot -> ModuleInventoryCleaner.isUsefulItem(slot.itemStack) }
 
             InventoryCleanupPlan(usefulItems.toHashSet(), mutableListOf(), hashMapOf())
         } else {

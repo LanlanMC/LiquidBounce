@@ -431,6 +431,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
+            ModuleSidePlace,
 
             // Client
             ModuleAutoConfig,

@@ -37,11 +37,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Camera.class)
 public abstract class MixinCamera {
@@ -141,32 +139,27 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getRunning() ? clipToSpace(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 
-    @Inject(method = "update", at = @At("TAIL"))
-    private void onUpdate(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
-        ModuleSmoothCamera.cameraUpdate(yaw, pitch, pos);
+    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;"))
+    private Vec3d modifyPositionVehicle(Vec3d instance, Vec3d vec) {
+        if (ModuleFreeLook.INSTANCE.getRunning()) {
+            return vec;
+        }
+
+        return ModuleSmoothCamera.shouldApplyChanges() ? vec.add(0, 1, 0) : vec;
     }
 
-    @ModifyReturnValue(method = "getPos", at = @At("RETURN"))
-    private Vec3d modifyGetPos(Vec3d original) {
+    @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", remap = false))
+    private void modifyPosition(Args args) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
+            return;
         }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
-    }
 
-    @ModifyReturnValue(method = "getYaw", at = @At("RETURN"))
-    private float modifyGetYaw(float original) {
-        if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
+        Vec3d original = new Vec3d(args.get(0), args.get(1), args.get(2));
+        ModuleSmoothCamera.cameraUpdate(original);
+        if (ModuleSmoothCamera.shouldApplyChanges()) {
+            args.set(0, ModuleSmoothCamera.INSTANCE.getSmoothPos().x);
+            args.set(1, ModuleSmoothCamera.INSTANCE.getSmoothPos().y);
+            args.set(2, ModuleSmoothCamera.INSTANCE.getSmoothPos().z);
         }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothYaw() : original;
-    }
-
-    @ModifyReturnValue(method = "getPitch", at = @At("RETURN"))
-    private float modifyGetPitch(float original) {
-        if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
-        }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPitch() : original;
     }
 }

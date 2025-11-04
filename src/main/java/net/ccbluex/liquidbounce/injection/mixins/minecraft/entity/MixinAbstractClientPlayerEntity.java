@@ -19,12 +19,15 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -69,5 +72,25 @@ public abstract class MixinAbstractClientPlayerEntity extends PlayerEntity {
                 ));
             }
         }
+    }
+
+    @ModifyExpressionValue(method = "getFovMultiplier",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;" +
+                            "getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"
+            )
+    )
+    private double hookGetAttributeValue(double original) {
+        if (!ModuleScaffold.INSTANCE.getRunning() || !ModuleScaffold.INSTANCE.getFakeSprint()) return original;
+
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player == null) return original;
+        // If the player is sprinting, we don't want to modify the FOV
+        if (MinecraftClient.getInstance().options.forwardKey.isPressed() && !player.isSprinting()) {
+            return original * 1.3;  // Sprinting will increase the FOV by 30%
+        }
+
+        return original;
     }
 }

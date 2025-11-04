@@ -226,6 +226,11 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
      */
     val autoSpeed by boolean("AutoSpeed", false)
 
+    /**
+     *  Applies the sprint FOV even when the player is not sprinting.
+     */
+    val fakeSprint by boolean("FakeSprint", false)
+
     private var ledge by boolean("Ledge", true)
 
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
