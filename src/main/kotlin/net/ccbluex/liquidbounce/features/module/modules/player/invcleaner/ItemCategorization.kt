@@ -28,21 +28,17 @@ import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
 import java.util.function.Predicate
 
-@JvmField
 val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
-
-@JvmField
 val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
     it.itemStack.hashCode()
 }
-
-@JvmField
 val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
     it.itemStack.maxDamage - it.itemStack.damage
 }
@@ -69,6 +65,9 @@ enum class ItemType(
      */
     val providedFunction: ItemFunction? = null
 ) {
+    KNOCKBACK(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
+    COBWEB(false),
+    FIREBALL(false),
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
@@ -80,11 +79,13 @@ enum class ItemType(
     THROWABLE(false),
     SHIELD(true),
     FOOD(false),
-    BUCKET(false),
+    BUCKET(true),  // TODO: More specific category?
     PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
+    EGAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
+    GENERIC(false),
     NONE(false),
 }
 
@@ -103,6 +104,10 @@ enum class ItemSortChoice(
      */
     val satisfactionCheck: Predicate<ItemStack>? = null,
 ) : NamedChoice {
+    KNOCKBACK("Knockback", ItemCategory(ItemType.KNOCKBACK, 0),
+        {it.enchantments.size == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 2 }),
+    COBWEB("Cobweb", ItemCategory(ItemType.COBWEB, 0), {it.item == Items.COBWEB}),
+    FIREBALL("Fireball", ItemCategory(ItemType.FIREBALL, 0), {it.item == Items.FIRE_CHARGE}),
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
@@ -120,7 +125,12 @@ enum class ItemSortChoice(
     GAPPLE(
         "Gapple",
         ItemCategory(ItemType.GAPPLE, 0),
-        Predicate { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
+        { it.item == Items.GOLDEN_APPLE}
+    ),
+    EGAPPLE(
+        "God Apple",
+        ItemCategory(ItemType.EGAPPLE, 0),
+        Predicate {it.item == Items.ENCHANTED_GOLDEN_APPLE }
     ),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
@@ -190,7 +200,7 @@ class ItemCategorization(
         }
 
         return buildList {
-            // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
+            // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
             when (val item = itemStack.item) {
@@ -201,6 +211,7 @@ class ItemCategorization(
                 is ArrowItem -> add(ArrowItemFacet(slot))
                 is FishingRodItem -> add(RodItemFacet(slot))
                 is ShieldItem -> add(ShieldItemFacet(slot))
+                Items.COBWEB -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.COBWEB, 0)))
                 is BlockItem -> {
                     if (ScaffoldBlockItemSelection.isValidBlock(itemStack)
                         && !ScaffoldBlockItemSelection.isBlockUnfavourable(itemStack)
@@ -240,11 +251,11 @@ class ItemCategorization(
 
                 Items.ENCHANTED_GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))
-                    add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1))
+                    add(PrimitiveItemFacet(slot, ItemCategory(ItemType.EGAPPLE, 0), 1))
                 }
 
-                Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> add(ThrowableItemFacet(slot))
-
+                Items.FIRE_CHARGE -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.FIREBALL, 0)))
+                Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> listOf(ThrowableItemFacet(slot))
                 else -> when {
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
@@ -254,10 +265,13 @@ class ItemCategorization(
 
                     itemStack.isFood -> add(FoodItemFacet(slot))
 
-                    else -> add(ItemFacet(slot))
+                    else -> if (ItemSortChoice.KNOCKBACK.satisfactionCheck?.test(slot.itemStack) == true) {
+                        add(PrimitiveItemFacet(slot, ItemCategory(ItemType.KNOCKBACK, 0)))
+                    } else {
+                        add(ItemFacet(slot))
+                    }
                 }
             }
-
         }
     }
 }

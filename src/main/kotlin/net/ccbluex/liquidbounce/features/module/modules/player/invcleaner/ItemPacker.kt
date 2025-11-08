@@ -55,11 +55,11 @@ class ItemPacker {
         hotbarSlotsToFill: List<ItemSlot>?,
         forbiddenSlots: Set<ItemSlot>,
         forbiddenSlotsToFill: Set<ItemSlot>,
-        contraintProvider: ItemAmountContraintProvider
+        constraintProvider: ItemAmountContraintProvider
     ): List<InventorySwap> {
         val moves = ArrayList<InventorySwap>()
 
-        val requriedStackCount = hotbarSlotsToFill?.size ?: 0
+        val requiredStackCount = hotbarSlotsToFill?.size ?: 0
 
         var currentStackCount = 0
         var currentItemCount = 0
@@ -68,8 +68,8 @@ class ItemPacker {
         val leftHotbarSlotIterator = hotbarSlotsToFill?.iterator()
 
         for (filledInItem in itemsToFillIn) {
-            val constraintsSatisfied = contraintProvider.getSatisfactionStatus(filledInItem)
-            val allStacksFilled = currentStackCount >= requriedStackCount
+            val constraintsSatisfied = constraintProvider.getSatisfactionStatus(filledInItem)
+            val allStacksFilled = currentStackCount >= requiredStackCount
 
             if (allStacksFilled && constraintsSatisfied == SATISFIED || constraintsSatisfied == OVERSATURATED) {
                 continue
@@ -84,7 +84,7 @@ class ItemPacker {
 
             usefulItems.add(filledInItemSlot)
 
-            contraintProvider.addItem(filledInItem)
+            constraintProvider.addItem(filledInItem)
 
             currentItemCount += filledInItem.itemStack.count
             currentStackCount++

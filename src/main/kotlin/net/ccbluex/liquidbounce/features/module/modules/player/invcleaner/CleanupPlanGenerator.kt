@@ -104,7 +104,7 @@ class CleanupPlanGenerator(
             this.packer.packItems(
                 itemsToFillIn = prioritizedItemList,
                 hotbarSlotsToFill = hotbarSlotsToFill,
-                contraintProvider = this,
+                constraintProvider = this,
                 forbiddenSlots = this.template.forbiddenSlots,
                 forbiddenSlotsToFill = this.template.forbiddenSlotsToFill
             )
