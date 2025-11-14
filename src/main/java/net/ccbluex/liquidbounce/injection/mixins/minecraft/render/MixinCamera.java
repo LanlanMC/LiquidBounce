@@ -105,6 +105,7 @@ public abstract class MixinCamera {
             ci.cancel();
             return;
         }
+
         var screen = ModuleDroneControl.INSTANCE.getScreen();
 
         if (screen != null) {

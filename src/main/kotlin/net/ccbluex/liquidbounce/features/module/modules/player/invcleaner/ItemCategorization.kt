@@ -35,14 +35,7 @@ import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
 import java.util.function.Predicate
 
-val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
-val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.hashCode()
-}
-val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.maxDamage - it.itemStack.damage
-}
-
+@JvmRecord
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(
@@ -85,7 +78,6 @@ enum class ItemType(
     EGAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
-    GENERIC(false),
     NONE(false),
 }
 
@@ -204,8 +196,6 @@ class ItemCategorization(
             add(WeaponItemFacet(slot))
 
             when (val item = itemStack.item) {
-                // Treat animal armor as a normal item
-                is AnimalArmorItem -> add(ItemFacet(slot))
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
                 is ArrowItem -> add(ArrowItemFacet(slot))
@@ -255,7 +245,8 @@ class ItemCategorization(
                 }
 
                 Items.FIRE_CHARGE -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.FIREBALL, 0)))
-                Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> listOf(ThrowableItemFacet(slot))
+                is EggItem, is SnowballItem, is WindChargeItem -> add(ThrowableItemFacet(slot))
+
                 else -> when {
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
@@ -272,6 +263,7 @@ class ItemCategorization(
                     }
                 }
             }
+
         }
     }
 }
