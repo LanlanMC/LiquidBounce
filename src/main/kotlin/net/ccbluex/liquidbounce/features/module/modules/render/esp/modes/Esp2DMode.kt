@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -67,9 +66,7 @@ object Esp2DMode : EspMode("2D") {
             val box = boxNoOffset.offset(pos)
 
             val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
-            if (projected.isEmpty()) {
-                continue
-            }
+            if (projected.isEmpty()) continue
 
             val color = getColor(entity)
             val baseColor = color.with(a = 50)
@@ -80,8 +77,8 @@ object Esp2DMode : EspMode("2D") {
             val maxX = projected.maxOf { it.x }
             val minY = projected.minOf { it.y }
             val maxY = projected.maxOf { it.y }
-            var rectWidth = (maxX - minX)
-            var rectHeight = (maxY - minY)
+            var rectWidth = maxX - minX
+            var rectHeight = maxY - minY
 
             val guiScaleFactor = mc.options.guiScale.value
             val outlineThickness = Outline.thickness.toFloat() / guiScaleFactor
@@ -113,8 +110,6 @@ object Esp2DMode : EspMode("2D") {
                                 -outlineThickness / 2 - borderThickness,
                                 rectHeight + outlineThickness / 2 + borderThickness,
                                 outlineThickness + 2 * borderThickness, black)
-
-                            translate(-0.5f, -0.5f)
                         }
 
                         drawHorizontalLine(-outlineThickness / 2,
@@ -139,8 +134,6 @@ object Esp2DMode : EspMode("2D") {
                         }
                     }
 
-                    translate(-HealthBar.spacing.toFloat() / guiScaleFactor - outlineThickness, 0.0f, 0.0f)
-
                     if (HealthBar.enabled) {
                         val actualHealth = entity.getActualHealth()
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
@@ -149,6 +142,8 @@ object Esp2DMode : EspMode("2D") {
                         val healthColor = Color4b.RED
                             .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
                         val healthHeight = rectHeight * healthPercentage
+
+                        translate(-HealthBar.spacing.toFloat() / guiScaleFactor - outlineThickness, 0.0f)
 
                         if (Border.enabled) {
                             drawVerticalLine(-outlineThickness / 2 - borderThickness,

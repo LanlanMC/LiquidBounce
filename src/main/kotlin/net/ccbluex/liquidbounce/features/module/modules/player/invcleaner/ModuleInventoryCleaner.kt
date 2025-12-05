@@ -30,9 +30,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 
 /**
@@ -65,7 +67,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
     private val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK)
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val items by items("Items", hashSetOf())
+    private val items by items("Items", itemSortedSetOf())
 
     init {
         tree(FeatureHeypixelCheck)
