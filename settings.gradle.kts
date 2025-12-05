@@ -36,3 +36,5 @@ pluginManagement {
 }
 
 rootProject.name = "LiquidBounce"
+
+include(":liquid-bounce-inbuilt-annotations")

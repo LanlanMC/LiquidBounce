@@ -16,10 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.minecraft.client.util.Handle
+plugins {
+    kotlin("jvm")
+}
 
-class ImmutableHandle<T>(val value: T) : Handle<T> {
-    override fun get() = value
+version = rootProject.version
+
+kotlin {
+    jvmToolchain(8)
 }

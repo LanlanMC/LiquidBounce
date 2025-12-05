@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.fill
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -66,21 +66,20 @@ object Esp2DMode : EspMode("2D") {
             val pos = entity.interpolateCurrentPosition(event.tickDelta)
             val box = boxNoOffset.offset(pos)
 
-            val color = getColor(entity)
-            val baseColor = color.with(a = 50).toARGB()
-            val outlineColor = color.with(a = 255).toARGB()
-            val black = Color4b.BLACK.toARGB()
-
             val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
                 continue
             }
 
+            val color = getColor(entity)
+            val baseColor = color.with(a = 50)
+            val outlineColor = color.with(a = 255)
+            val black = Color4b.BLACK
+
             val minX = projected.minOf { it.x }
             val maxX = projected.maxOf { it.x }
             val minY = projected.minOf { it.y }
             val maxY = projected.maxOf { it.y }
-            val minZ = projected.minOf { it.z } // TODO: Handle Z-index correctly
             var rectWidth = (maxX - minX)
             var rectHeight = (maxY - minY)
 
@@ -90,10 +89,10 @@ object Esp2DMode : EspMode("2D") {
 
             with(event.context) {
                 matrices.withPush {
-                    translate(minX, minY, minZ)
+                    translate(minX, minY)
 
                     if (fill) {
-                        fill(0f, 0f, rectWidth, rectHeight, 0f, baseColor)
+                        drawQuad(0.0f, 0.0f, rectWidth, rectHeight, fillColor = baseColor)
                     }
 
                     if (Outline.enabled) {
@@ -114,6 +113,8 @@ object Esp2DMode : EspMode("2D") {
                                 -outlineThickness / 2 - borderThickness,
                                 rectHeight + outlineThickness / 2 + borderThickness,
                                 outlineThickness + 2 * borderThickness, black)
+
+                            translate(-0.5f, -0.5f)
                         }
 
                         drawHorizontalLine(-outlineThickness / 2,
@@ -134,7 +135,7 @@ object Esp2DMode : EspMode("2D") {
                             outlineThickness, outlineColor)
 
                         if (Border.enabled) {
-                            translate(-2 * borderThickness, 0.0f, 0.0f)
+                            translate(-2 * borderThickness, 0.0f)
                         }
                     }
 
@@ -147,7 +148,6 @@ object Esp2DMode : EspMode("2D") {
 
                         val healthColor = Color4b.RED
                             .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
-                            .toARGB()
                         val healthHeight = rectHeight * healthPercentage
 
                         if (Border.enabled) {
@@ -156,6 +156,7 @@ object Esp2DMode : EspMode("2D") {
                                 rectHeight + outlineThickness / 2 + borderThickness,
                                 outlineThickness + 2 * borderThickness, black)
                         }
+
                         drawVerticalLine(-outlineThickness / 2,
                             rectHeight - healthHeight - outlineThickness / 2,
                             rectHeight + outlineThickness / 2, outlineThickness, healthColor)
