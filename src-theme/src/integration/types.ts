@@ -144,6 +144,7 @@ export interface ChooseSetting extends Setting<string> {
 export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
     canBeNone: boolean;
+    isOrderSensitive: boolean;
 }
 
 export interface ListSetting extends Setting<string[]> {
@@ -370,7 +371,7 @@ export interface Theme {
     settings: { [name: string]: any };
 }
 
-export interface Component {
+export interface HudComponent {
     name: string;
     id: string;
     settings: { [name: string]: any };

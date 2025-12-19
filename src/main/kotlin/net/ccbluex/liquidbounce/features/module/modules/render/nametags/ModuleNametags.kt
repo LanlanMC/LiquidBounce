@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.GuiGraphics
 import org.joml.Vector2fc
 
 /**
@@ -35,8 +35,15 @@ import org.joml.Vector2fc
  * Makes player name tags more visible and adds useful information.
  */
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
-    internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
-    val scale by float("Scale", 2F, 0.25F..4F)
+
+    init {
+        tree(NametagTextFormatter)
+        tree(NametagEquipment)
+        tree(NametagEnchantmentRenderer)
+    }
+
+    internal val scale by float("Scale", 2F, 0.25F..4F)
+    internal val border by boolean("Border", true)
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
@@ -65,7 +72,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         event.context.drawNametags(event.tickDelta)
     }
 
-    private fun DrawContext.drawNametags(tickDelta: Float) {
+    private fun GuiGraphics.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
 
         for (nametagInfo in nametagsToRender) {
@@ -84,7 +91,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
-            if (entity.squaredDistanceTo(mc.cameraEntity) > maximumDistanceSquared) {
+            if (entity.distanceToSqr(mc.cameraEntity!!) > maximumDistanceSquared) {
                 continue
             }
 
@@ -94,7 +101,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.squaredDistanceTo(mc.cameraEntity)
+        nametag.entity.distanceToSqr(mc.cameraEntity!!)
     }
 
 }

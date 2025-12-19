@@ -26,15 +26,6 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
     }
-
-    plugins {
-        val loom_version: String by settings
-        val kotlin_version: String by settings
-        id("fabric-loom") version loom_version
-        kotlin("jvm") version kotlin_version
-    }
 }
 
 rootProject.name = "LiquidBounce"
-
-include(":liquid-bounce-inbuilt-annotations")
