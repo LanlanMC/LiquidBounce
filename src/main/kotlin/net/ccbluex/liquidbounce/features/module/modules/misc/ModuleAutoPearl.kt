@@ -204,7 +204,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
         destination: Vec3
     ): Boolean {
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            entity = player,
+            owner = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
             rotation = angles
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
@@ -221,6 +221,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
     ): HitResult? =
         TrajectoryInfoRenderer(
             owner = owner,
+            icon = Items.ENDER_PEARL.defaultInstance,
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,

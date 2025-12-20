@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import it.unimi.dsi.fastutil.ints.IntObjectPair
-import net.ccbluex.fastutil.component1
-import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -72,6 +70,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -275,7 +274,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             fun ItemStack.blockCount() = if (isValidBlock(this)) this.count else 0
 
             return player.offhandItem.blockCount() + if (ScaffoldAutoBlockFeature.enabled) {
-                findPlaceableSlots().sumOf { it.value().blockCount() }
+                findPlaceableSlots().sumOf { it.value.blockCount() }
             } else {
                 player.inventory.getItem(player.inventory.selectedSlot).blockCount()
             }
@@ -481,7 +480,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     }
 
     @Suppress("unused")
-    val timerHandler = tickHandler {
+    private val timerHandler = handler<GameTickEvent> {
         if (timer != 1f) {
             Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
         }
@@ -534,11 +533,22 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             isValidBlock(player.getItemInHand(it))
         }
 
+        fun commonPlaceSucceed(placed: BlockPos) {
+            ScaffoldMovementPlanner.trackPlacedBlock(placed)
+            renderer.addBlock(placed)
+            ScaffoldEagleFeature.onBlockPlacement()
+            ScaffoldBlinkFeature.onBlockPlacement()
+            ScaffoldSprintControlFeature.onBlockPlacement()
+        }
+
         if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
             && SimulatePlacementAttempts.clicker.isClickTick
         ) {
             SimulatePlacementAttempts.clicker.click {
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, swingMode = swingMode)
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, {
+                    commonPlaceSucceed(currentCrosshairTarget.targetBlockPos)
+                    true
+                }, swingMode = swingMode)
                 true
             }
         }
@@ -548,7 +558,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         }
 
         // Does the crosshair target meet the requirements?
-        if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget) ||
+        if (!target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget) ||
             !isValidCrosshairTarget(currentCrosshairTarget)
         ) {
             return@tickHandler
@@ -594,10 +604,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
-            ScaffoldMovementPlanner.trackPlacedBlock(target)
-            renderer.addBlock(target.placedBlock)
+            commonPlaceSucceed(target.placedBlock)
             currentTarget = null
-
             wasSuccessful = true
             true
         }, swingMode = swingMode)
@@ -613,20 +621,17 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         if (wasSuccessful) {
             ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
-            ScaffoldEagleFeature.onBlockPlacement()
-            ScaffoldBlinkFeature.onBlockPlacement()
-            ScaffoldSprintControlFeature.onBlockPlacement()
 
             waitTicks(currentDelay)
         }
     }
 
-    private fun findPlaceableSlots() = buildList<IntObjectPair<ItemStack>>(9) {
+    private fun findPlaceableSlots() = buildList(9) {
         for (i in 0..8) {
             val stack = player.inventory.getItem(i)
 
             if (isValidBlock(stack)) {
-                add(IntObjectPair.of(i, stack))
+                add(IndexedValue(i, stack))
             }
         }
     }
@@ -637,8 +642,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         val (slot, _) = placeableSlots
             .filter { (_, stack) -> stack.count > doNotUseBelowCount }
-            .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.value(), o2.value()) }
-            ?: placeableSlots.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.value(), o2.value()) }
+            .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.value, o2.value) }
+            ?: placeableSlots.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.value, o2.value) }
             ?: return null
 
         return slot
