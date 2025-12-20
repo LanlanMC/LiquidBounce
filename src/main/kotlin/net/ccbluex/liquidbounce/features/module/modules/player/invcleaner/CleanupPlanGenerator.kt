@@ -70,7 +70,7 @@ class CleanupPlanGenerator(
 //                constraintInfo -> (this.currentLimit[constraintInfo.group] ?: 0) >=
 //                        constraintInfo.group.acceptableRange.last
 //            }
-            val currentItemAmount = player.inventory.count(it.itemStack.item)
+            val currentItemAmount = player.inventory.countItem(it.itemStack.item)
 
             return@removeIf constraints.any {
                 constraintInfo -> currentItemAmount >= constraintInfo.group.acceptableRange.last

@@ -23,9 +23,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.featu
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 
 
 /**
@@ -37,7 +37,7 @@ import net.minecraft.item.Items
 object FeatureHeypixelCheck: ToggleableConfigurable(ModuleInventoryCleaner, "HeypixelCheck", false) {
     fun isHeypixelUsefulItem(item: ItemStack): Boolean {
         return (item.item == Items.GOLDEN_AXE
-            && item.damage >= 31
+            && item.damageValue >= 31
             && item.getEnchantment(Enchantments.SHARPNESS) > 10)  // check if this golden axe is an instant-kill axe
     }
 }

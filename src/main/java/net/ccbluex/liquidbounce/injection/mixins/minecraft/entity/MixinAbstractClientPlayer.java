@@ -25,15 +25,9 @@ import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.SkinTextures;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.level.Level;
@@ -78,20 +72,19 @@ public abstract class MixinAbstractClientPlayer extends Player {
         }
     }
 
-    @ModifyExpressionValue(method = "getFovMultiplier",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;" +
-                            "getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"
-            )
+    @ModifyExpressionValue(method = "getFieldOfViewModifier",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/player/AbstractClientPlayer;getAttributeValue(Lnet/minecraft/core/Holder;)D"
+        )
     )
     private double hookGetAttributeValue(double original) {
         if (!ModuleScaffold.INSTANCE.getRunning() || !ModuleScaffold.INSTANCE.getFakeSprint()) return original;
 
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return original;
         // If the player is sprinting, we don't want to modify the FOV
-        if (MinecraftClient.getInstance().options.forwardKey.isPressed() && !player.isSprinting()) {
+        if (Minecraft.getInstance().options.keyUp.isDown() && !player.isSprinting()) {
             return original * 1.3;  // Sprinting will increase the FOV by 30%
         }
 

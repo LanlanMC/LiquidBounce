@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isFood
@@ -56,12 +57,7 @@ import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.fluid.LavaFluid
-import net.minecraft.fluid.WaterFluid
-import net.minecraft.item.*
+import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.level.material.LavaFluid
 import net.minecraft.world.level.material.WaterFluid
@@ -147,7 +143,7 @@ enum class ItemSortChoice(
     val satisfactionCheck: Predicate<ItemStack>? = null,
 ) : NamedChoice {
     KNOCKBACK("Knockback", ItemCategory(ItemType.KNOCKBACK, 0),
-        {it.enchantments.size == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 2 }),
+        {it.enchantments.size() == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 2 }),
     COBWEB("Cobweb", ItemCategory(ItemType.COBWEB, 0), {it.item == Items.COBWEB}),
     FIREBALL("Fireball", ItemCategory(ItemType.FIREBALL, 0), {it.item == Items.FIRE_CHARGE}),
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),

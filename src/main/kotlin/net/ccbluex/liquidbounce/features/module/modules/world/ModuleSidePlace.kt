@@ -27,10 +27,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.minecraft.item.ItemStack
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Direction
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.minecraft.core.Direction
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.phys.HitResult
 import kotlin.math.absoluteValue
 
 
@@ -72,31 +73,30 @@ object ModuleSidePlace: ClientModule("SidePlace", Category.WORLD) {
         if (placeCooldown > 0) return@tickHandler  // Wait for cooldown
 
         val heldItem = getHeldItem()
-        if (heldItem == null
-            || heldItem.isEmpty
+        if (heldItem.isEmpty
             || !isValidBlock(heldItem)
             || ScaffoldBlockItemSelection.isBlockUnfavourable(heldItem)
         ) {
             return@tickHandler
         }  //  hand item
-        if (PitchCheck.enabled && 90-player.pitch.absoluteValue !in PitchCheck.pitch) return@tickHandler  //  pitch
-        if (stopOnLeftClick && mc.options.attackKey.isPressed) return@tickHandler  //  left-click
-        if (holdRight && !mc.options.useKey.isPressed) return@tickHandler  //  right-click
+        if (PitchCheck.enabled && 90 - player.yRot.absoluteValue !in PitchCheck.pitch) return@tickHandler  //  pitch
+        if (stopOnLeftClick && mc.options.keyAttack.isPressedOnAny) return@tickHandler  //  left-click
+        if (holdRight && !mc.options.keyUse.isPressedOnAny) return@tickHandler  //  right-click
 
         val raycastResult = raycast()
         if (raycastResult.type != HitResult.Type.BLOCK) return@tickHandler  // Ensure the player is looking at a block
-        if (raycastResult.side in arrayOf(Direction.UP, Direction.DOWN)) return@tickHandler  // Sides only
+        if (raycastResult.direction in arrayOf(Direction.UP, Direction.DOWN)) return@tickHandler  // Sides only
 
-        val suitableHand = arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull {
-            isValidBlock(player.getStackInHand(it))
+        val suitableHand = arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND).firstOrNull {
+            isValidBlock(player.getItemInHand(it))
         }
         doPlacement(raycastResult, suitableHand!!)
         placeCooldown = placeDelay.random()
     }
 
-    private fun getHeldItem() = if (player.mainHandStack != null && player.mainHandStack.item != ItemStack.EMPTY) {
-        player.mainHandStack
+    private fun getHeldItem() = if (!player.mainHandItem.isEmpty) {
+        player.mainHandItem
     } else {
-        player.offHandStack
+        player.offhandItem
     }
 }
