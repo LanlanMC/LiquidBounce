@@ -44,7 +44,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 public abstract class MixinCamera {
 
     @Shadow
-    private Vec3 position;
+    private Entity entity;
     @Shadow
     private boolean detached;
     @Shadow
@@ -151,19 +151,21 @@ public abstract class MixinCamera {
     @Inject(method = "setup", at = @At("TAIL"))
     private void onUpdate(Level area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
         float tickProgress, CallbackInfo ci) {
-        ModuleSmoothCamera.cameraUpdate(yRot, xRot, position);
-    }
-
-    @ModifyReturnValue(method = "position", at = @At("RETURN"))
-    private Vec3 modifyGetPos(Vec3 original) {
-        if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
+        if (ModuleSmoothCamera.INSTANCE.getRunning()) {
+            ModuleSmoothCamera.cameraUpdate(entity.getEyePosition());
         }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
     }
 
-    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d modifyPositionVehicle(Vec3d instance, Vec3d vec) {
+//    @ModifyReturnValue(method = "position", at = @At("RETURN"))
+//    private Vec3 modifyGetPos(Vec3 original) {
+//        if (ModuleFreeLook.INSTANCE.getRunning()) {
+//            return original;
+//        }
+//        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
+//    }
+
+    @Redirect(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 modifyPositionVehicle(Vec3 instance, Vec3 vec) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return vec;
         }
@@ -171,16 +173,15 @@ public abstract class MixinCamera {
         return ModuleSmoothCamera.shouldApplyChanges() ? vec.add(0, 1, 0) : vec;
     }
 
-    @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", remap = false))
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
     private void modifyPosition(Args args) {
-            return;
-
-        Vec3d original = new Vec3d(args.get(0), args.get(1), args.get(2));
-        ModuleSmoothCamera.cameraUpdate(original);
+        ModuleSmoothCamera.cameraUpdate(new Vec3(args.get(0), args.get(1), args.get(2)));
+        if (ModuleFreeLook.INSTANCE.getRunning()) return;
         if (ModuleSmoothCamera.shouldApplyChanges()) {
-            args.set(0, ModuleSmoothCamera.INSTANCE.getSmoothPos().x);
-            args.set(1, ModuleSmoothCamera.INSTANCE.getSmoothPos().y);
-            args.set(2, ModuleSmoothCamera.INSTANCE.getSmoothPos().z);
+            Vec3 smoothPos = ModuleSmoothCamera.INSTANCE.getSmoothPos();
+            args.set(0, smoothPos.x);
+            args.set(1, smoothPos.y);
+            args.set(2, smoothPos.z);
         }
     }
 }

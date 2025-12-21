@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -31,17 +30,17 @@ import net.minecraft.world.phys.Vec3
  * Makes your camera move smoother.
  */
 object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
-    private val enableFirstPOV by boolean("Enable First Pov", default = false)
-    private val resetOnPerspectiveChange by boolean("Reset on Perspective Change", default = true)
+    private val enableFirstPOV by boolean("EnableFirstPov", default = false)
+    private val resetOnPerspectiveChange by boolean("ResetOnPerspectiveChange", default = true)
 
-    private val factorH by float("Horizontal Factor", 0.9f, 0f..1f)
-    private val factorV by float("Vertical Factor", 0.93f, 0f..1f)
+    private val factorH by float("HorizontalFactor", 0.9f, 0f..1f)
+    private val factorV by float("VerticalFactor", 0.93f, 0f..1f)
 
     var smoothPos: Vec3 = Vec3.ZERO
         private set
 
     private val perspective
-        get () = mc.options.perspective
+        get () = mc.options.cameraType
 
     private var lastPerspective = perspective
 
@@ -72,7 +71,7 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
             smoothPos = pos
         }
 
-        smoothPos = Vec3d(
+        smoothPos = Vec3(
             smoothPos.x * factorH + pos.x * (1 - factorH),
             smoothPos.y * factorV + pos.y * (1 - factorV),
             smoothPos.z * factorH + pos.z * (1 - factorH)
