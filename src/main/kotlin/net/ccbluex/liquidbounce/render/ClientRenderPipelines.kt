@@ -132,17 +132,33 @@ object ClientRenderPipelines {
     }
 
     object GUI {
-        @JvmField
-        val Lines = newPipeline("gui/lines") {
+        private val Lines = newPipeline("gui/lines") {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
         }
 
-        @JvmField
-        val Triangles = newPipeline("gui/triangles") {
+        private val Triangles = newPipeline("gui/triangles") {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLES)
         }
+
+        private val LinesNoCull = newPipeline("gui/lines_no_cull") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withCull(false)
+            withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
+        }
+
+        private val TrianglesNoCull = newPipeline("gui/triangles_no_cull") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withCull(false)
+            withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLES)
+        }
+
+        @JvmStatic
+        fun lines(cull: Boolean) = if (cull) Lines else LinesNoCull
+
+        @JvmStatic
+        fun triangles(cull: Boolean) = if (cull) Triangles else TrianglesNoCull
     }
 
     @JvmField
@@ -180,6 +196,17 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
+    /**
+     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP
+     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
+     */
+    @JvmField
+    val OutlineQuads = newPipeline("outline_quads") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        withBlend(COVERING_BLEND)
+    }
+
     @JvmField
     val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
@@ -189,13 +216,18 @@ object ClientRenderPipelines {
 
     // Special
 
+    /**
+     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+     * @see RenderPipelines.OUTLINE_SNIPPET
+     */
     @JvmField
     val Outline = newPipeline("outline") {
         screenQuad()
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
         withSampler("InSampler")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withDepthWrite(false)
+        withColorWrite(true, false)
     }
 
     @JvmField
@@ -207,6 +239,7 @@ object ClientRenderPipelines {
         withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withDepthWrite(false)
     }
 
     @JvmField

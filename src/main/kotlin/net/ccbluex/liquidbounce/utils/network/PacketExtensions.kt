@@ -17,15 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.utils.network
 
-import it.unimi.dsi.fastutil.objects.ObjectImmutableList
-import java.util.*
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
-fun <T> Array<out T>?.unmodifiable(): List<T> =
-    when {
-        isNullOrEmpty() -> emptyList()
-        size == 1 -> Collections.singletonList(this[0])
-        else -> ObjectImmutableList(this)
-    }
+fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
+    return this.movement.y.toRawBits() == -4633060179779189496L // -0.0783739241897089
+}

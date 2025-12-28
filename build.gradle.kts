@@ -95,6 +95,10 @@ allprojects {
             name = "NikOverflow"
             url = uri("https://reposilite.nikoverflow.com/releases")
         }
+        maven {
+            name = "ParchmentMC"
+            url = uri("https://maven.parchmentmc.org")
+        }
     }
 }
 
@@ -105,7 +109,10 @@ loom {
 dependencies {
     // Minecraft
     minecraft(libs.minecraft)
-    mappings(loom.officialMojangMappings())
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:2025.12.20@zip")
+    })
 
     // Fabric
     modApi(libs.fabric.loader)
@@ -118,6 +125,8 @@ dependencies {
     // Recommended mods (on IDE)
     modApi(libs.sodium)
     modApi(libs.lithium)
+    modRuntimeOnly(libs.immediatelyFast)
+    modRuntimeOnly(libs.iris)
 
     // ViaFabricPlus
     modApi(libs.vfp.api)
@@ -169,9 +178,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 //    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // Fix nullable annotations
-    compileOnlyApi("com.google.code.findbugs:jsr305:3.0.2")
 
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {

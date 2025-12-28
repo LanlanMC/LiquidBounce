@@ -21,9 +21,9 @@
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.range
-import net.ccbluex.liquidbounce.utils.math.forEach3D
+import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -51,8 +51,10 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
+
+private val ITERATION_PROPORTIONS = 0.05..0.95 step 0.1
+private val ITERATION_PROPORTIONS_PRECISE = 0.05..0.95 step 0.05
 
 fun raytraceBlockRotation(
     eyes: Vec3,
@@ -145,11 +147,13 @@ private open class BestRotationTracker(val comparator: Comparator<Rotation>, val
         }
     }
 
-    open fun getIsRotationBetter(base: RotationWithVector?, newRotation: RotationWithVector,
-                                 visible: Boolean): Boolean {
-        return base?.let { currentlyBest ->
-            this.comparator.compare(currentlyBest.rotation, newRotation.rotation) > 0
-        } != false
+    open fun getIsRotationBetter(
+        base: RotationWithVector?,
+        newRotation: RotationWithVector,
+        visible: Boolean,
+    ): Boolean {
+        base ?: return true
+        return this.comparator.compare(base.rotation, newRotation.rotation) > 0
     }
 
 }
@@ -204,11 +208,13 @@ class BlockVisibilityPredicate(private val expectedTarget: BlockPos) : Visibilit
     }
 }
 
-object BoxVisibilityPredicate : VisibilityPredicate {
+object BoxVisibilityPredicate : VisibilityPredicate, DebuggedOwner {
     override fun isVisible(
         eyesPos: Vec3,
         targetSpot: Vec3,
     ): Boolean {
+//        debugGeometry("TargetSpot") { ModuleDebug.DebuggedPoint(targetSpot, color = Color4b.LIQUID_BOUNCE) }
+
         return canSeePointFrom(eyesPos, targetSpot)
     }
 }
@@ -263,7 +269,7 @@ fun raytraceBlockSide(
 //            chat(side.toString())
 
 
-            range(0.05..0.95 step 0.1, 0.05..0.95 step 0.1) { a, b ->
+            range(ITERATION_PROPORTIONS, ITERATION_PROPORTIONS) { a, b ->
                 val spot = pointOnBlockSide(side, a, b, box) + pos.toVec3d()
 
                 bestRotationTracker.considerSpot(
@@ -309,11 +315,7 @@ fun raytraceBox(
     val wallsRangeSquared = wallsRange * wallsRange
 
     val preferredSpot = rotationPreference.getPreferredSpotOnBox(box, eyes, range)
-    val preferredSpotOnBox = if (box.contains(eyes) && box.contains(preferredSpot)) {
-        preferredSpot
-    } else {
-        box.clip(eyes, preferredSpot).getOrNull()
-    }
+    val preferredSpotOnBox = box.firstHit(from = eyes, to = preferredSpot)
 
     if (preferredSpotOnBox != null) {
         val preferredSpotDistance = eyes.distanceToSqr(preferredSpotOnBox)
@@ -335,7 +337,7 @@ fun raytraceBox(
 
     // There are some spots that loops cannot detect, therefore this is used
     // since it finds the nearest spot within the requested range.
-    val nearestSpot = getNearestPoint(eyes, box)
+    val nearestSpot = box.getNearestPoint(eyes)
 
     bestRotationTracker.considerSpot(
         preferredSpot,
@@ -375,17 +377,13 @@ private fun BestRotationTracker.considerSpot(
     // Elongate the line so we have no issues with fp-precision
     val raycastTarget = (preferredSpot - eyes) * 2.0 + eyes
 
-    val spotOnBox = if (box.contains(eyes) && box.contains(raycastTarget)) {
-        raycastTarget
-    } else {
-        box.clip(eyes, raycastTarget).getOrNull() ?: return
-    }
-    val distance = eyes.distanceToSqr(spotOnBox)
+    val spotOnBox = box.firstHit(eyes, raycastTarget) ?: return
+    val distSq = eyes.distanceToSqr(spotOnBox)
 
-    val visible = visibilityPredicate.isVisible(eyes, raycastTarget)
+    val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
 
     // Is either spot visible or distance within wall range?
-    if ((!visible || distance >= rangeSquared) && distance >= wallsRangeSquared) {
+    if ((!visible || distSq >= rangeSquared) && distSq >= wallsRangeSquared) {
         return
     }
 
@@ -395,7 +393,7 @@ private fun BestRotationTracker.considerSpot(
 }
 
 /**
- * Determines if the player is able to see a [Box].
+ * Determines if the player is able to see a [AABB].
  *
  * Will return `true` if the player is inside the [box].
  */
@@ -443,25 +441,17 @@ private inline fun scanBoxPoints(
 
     // We cannot project points on something if we are inside the hitbox
     if (!isOutsideBox) {
-        box.scanBoxPoints3D(0.1, fn)
+        range(ITERATION_PROPORTIONS, ITERATION_PROPORTIONS, ITERATION_PROPORTIONS) { x, y, z ->
+            val vec3 = Vec3(
+                box.minX + box.xsize * x,
+                box.minY + box.ysize * y,
+                box.minZ + box.zsize * z,
+            )
+
+            fn(vec3)
+        }
     }
 }
-
-private inline fun AABB.scanBoxPoints3D(
-    step: Double,
-    fn: (Vec3) -> Unit,
-) {
-    forEach3D(Vec3(0.05, 0.05, 0.05), Vec3(0.95, 0.95, 0.95), step) { x, y, z ->
-        val vec3 = Vec3(
-            minX + (maxX - minX) * x,
-            minY + (maxY - minY) * y,
-            minZ + (maxZ - minZ) * z,
-        )
-
-        fn(vec3)
-    }
-}
-
 
 /**
  * Find the best spot of the upper block side
@@ -482,8 +472,8 @@ fun raytraceUpperBlockSide(
 
     val bestRotationTracker = BestRotationTracker(rotationPreference)
 
-    val stepSize = rotationsNotToMatch?.let { 0.05 } ?: 0.1
-    range(0.1..0.9 step stepSize, 0.1..0.9 step stepSize) { x, z ->
+    val proportions = rotationsNotToMatch?.let { ITERATION_PROPORTIONS_PRECISE } ?: ITERATION_PROPORTIONS
+    range(proportions, proportions) { x, z ->
         val vec3 = vec3d.add(x, 0.9, z)
 
         // skip because of out of range

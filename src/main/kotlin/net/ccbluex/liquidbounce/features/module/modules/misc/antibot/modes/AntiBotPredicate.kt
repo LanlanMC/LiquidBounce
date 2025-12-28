@@ -17,15 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import it.unimi.dsi.fastutil.objects.ObjectImmutableList
-import java.util.*
+import net.minecraft.world.entity.player.Player
 
-fun <T> Array<out T>?.unmodifiable(): List<T> =
-    when {
-        isNullOrEmpty() -> emptyList()
-        size == 1 -> Collections.singletonList(this[0])
-        else -> ObjectImmutableList(this)
-    }
+fun interface AntiBotPredicate {
+    fun isBot(entity: Player): Boolean
+}

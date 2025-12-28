@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.config.util.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -51,7 +52,6 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -242,7 +242,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     private fun updateTargetToHarvest(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
         val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             !state.isAir && pos.readyForHarvest(state) &&
-                    getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
+                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
         return updateTarget(blocksToBreak)
@@ -308,7 +308,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         val blocksToFertile = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             !state.isAir && pos.canUseBoneMeal(state) &&
-                getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
+                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
         return updateTarget(blocksToFertile)
@@ -345,7 +345,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     private fun Iterable<AutoFarmTrackedState.Plantable>.findPlantableSides(
         pos: BlockPos,
         state: BlockState,
-    ) = flatMapTo(emptyEnumSet()) { it.findPlantableSides(pos, state) }
+    ) = flatMapTo(enumSetOf()) { it.findPlantableSides(pos, state) }
 
     override fun onEnabled() {
         ChunkScanner.subscribe(AutoFarmBlockTracker)

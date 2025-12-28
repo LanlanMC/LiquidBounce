@@ -25,6 +25,7 @@ import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 import kotlin.math.min
 
@@ -82,13 +83,19 @@ fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
     return tEntry <= tExit
 }
 
-val AABB.size: Double
-    get() = this.xsize * this.ysize * this.zsize
-
 fun AABB.getCoordinate(direction: Direction): Double {
     return if (direction.axisDirection == Direction.AxisDirection.POSITIVE) {
         this.max(direction.axis)
     } else {
         this.min(direction.axis)
+    }
+}
+
+/** Ray–AABB first hit point (entry or exit). */
+fun AABB.firstHit(from: Vec3, to: Vec3): Vec3? {
+    return if (contains(from)) {
+        clip(to, from).getOrNull()
+    } else {
+        clip(from, to).getOrNull()
     }
 }
