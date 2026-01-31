@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.LedgeAction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
@@ -41,9 +40,10 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.floor
@@ -53,7 +53,7 @@ import kotlin.random.Random
 
 object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedgeExtension {
 
-    private enum class Mode(override val choiceName: String) : NamedChoice {
+    private enum class Mode(override val tag: String) : Tagged {
         JUMP("Jump"),
         SNEAK("Sneak"),
         /**
@@ -87,25 +87,25 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
 
         return if (snapshotOne.clipLedged) {
             val cameraPosition = snapshotOne.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
-            val currentCrosshairTarget = raycast(start = cameraPosition, direction = rotation.directionVector)
+            val currentCrosshairTarget = traceFromPoint(start = cameraPosition, direction = rotation.directionVector)
 
             if (target == null) {
                 return LedgeAction.NO_LEDGE
             }
 
-            val targetFullfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
+            val targetFulfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
             val isValidCrosshairTarget = ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)
 
-            ModuleDebug.debugParameter(this, "targetFullfillsRequirements", targetFullfillsRequirements.toString())
+            ModuleDebug.debugParameter(this, "targetFulfillsRequirements", targetFulfillsRequirements.toString())
             ModuleDebug.debugParameter(this, "isValidCrosshairTarget", isValidCrosshairTarget.toString())
 
             // Does the crosshair target meet the requirements?
-            if (targetFullfillsRequirements && isValidCrosshairTarget) {
+            if (targetFulfillsRequirements && isValidCrosshairTarget) {
                 return LedgeAction.NO_LEDGE
             }
 
             // If the crosshair target does not meet the requirements,
-            // we need to prevent the player from falling off the ledge e.g by jumping or sneaking.
+            // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
             when {
                 ModuleScaffold.blockCount < forceSneakBelowCount -> {
                     LedgeAction(sneakTime = sneakTime.random())

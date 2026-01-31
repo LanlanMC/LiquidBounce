@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.config.util.asRefreshable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -53,13 +52,14 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.level.block.state.BlockState
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BoneMealItem
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 
@@ -68,7 +68,7 @@ import net.minecraft.world.phys.shapes.CollisionContext
  *
  * Automatically farms stuff for you.
  */
-object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
+object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -80,11 +80,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
-    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
+    private object AutoPlaceCrops : ToggleableValueGroup(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
         val swapBackDelay by intRange("SwapBackDelay", 1..2, 1..20, "ticks")
     }
 
-    internal object AutoUseBoneMeal : ToggleableConfigurable(this, "AutoUseBoneMeal", false) {
+    internal object AutoUseBoneMeal : ToggleableValueGroup(this, "AutoUseBoneMeal", false) {
         private val chronometer = Chronometer()
         // TODO Use filter (wheat/potato/...)
         private val useDelay = intRange("UseDelay", 20..200, 0..20000, "ms").asRefreshable()
@@ -107,7 +107,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         tree(AutoFarmVisualizer)
     }
 
-    internal val rotations = tree(RotationsConfigurable(this))
+    internal val rotations = tree(RotationsValueGroup(this))
 
     private fun swapToSlotWithFortune() {
         if (!fortune) {
@@ -149,7 +149,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         // Return if we don't have a target
         currentTarget ?: return@tickHandler
 
-        val rayTraceResult = raycast(
+        val rayTraceResult = traceFromPoint(
             range = range.toDouble(),
             start = player.eyePosition,
             direction = (RotationManager.currentRotation ?: player.rotation).directionVector,
@@ -228,7 +228,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             // aim at target
             RotationManager.setRotationTarget(
                 rotation,
-                configurable = rotations,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 provider = this@ModuleAutoFarm
             )
@@ -291,7 +291,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             // aim at target
             RotationManager.setRotationTarget(
                 rotation,
-                configurable = rotations,
+                valueGroup = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 provider = this@ModuleAutoFarm
             )

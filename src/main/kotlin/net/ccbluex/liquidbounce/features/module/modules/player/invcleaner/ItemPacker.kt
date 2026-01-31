@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.OVERSATURATED
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.SATISFIED
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.SATISFIED
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.minecraft.world.item.ItemStack
@@ -45,17 +44,17 @@ class ItemPacker {
     val usefulItems = HashSet<ItemSlot>()
 
     /**
-     * Takes items from the [itemsToFillIn] list until it collected [maxItemCount] items is and [requiredStackCount]
-     * stacks. The items are marked as useful and fills in hotbar slots if there are still slots to fill.
+     * Takes items from the [itemsToFillIn] list until it has collected [maxItemCount] items and [requiredStackCount]
+     * stacks. The items are marked as useful and fill in hotbar slots if there are still slots to fill.
      *
-     * @return returns the item moves ("swaps") that should to be executed.
+     * @return returns the item moves (aka "swaps") that should be executed.
      */
     fun packItems(
         itemsToFillIn: List<ItemFacet>,
         hotbarSlotsToFill: List<ItemSlot>?,
         forbiddenSlots: Set<ItemSlot>,
         forbiddenSlotsToFill: Set<ItemSlot>,
-        constraintProvider: ItemAmountContraintProvider
+        constraintProvider: ItemAmountConstraintProvider
     ): List<InventorySwap> {
         val moves = ArrayList<InventorySwap>()
 
@@ -160,7 +159,7 @@ class ItemPacker {
         return null
     }
 
-    interface ItemAmountContraintProvider {
+    interface ItemAmountConstraintProvider {
         fun getSatisfactionStatus(item: ItemFacet): SatisfactionStatus
         fun addItem(item: ItemFacet)
 

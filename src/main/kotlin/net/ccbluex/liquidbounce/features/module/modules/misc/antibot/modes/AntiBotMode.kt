@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 
-sealed class AntiBotMode(name: String) : Choice(name), AntiBotPredicate {
-    final override val parent: ChoiceConfigurable<*>
+sealed class AntiBotMode(name: String) : Mode(name), AntiBotPredicate {
+    final override val parent: ModeValueGroup<*>
         get() = ModuleAntiBot.modes
 
     open fun reset() { }

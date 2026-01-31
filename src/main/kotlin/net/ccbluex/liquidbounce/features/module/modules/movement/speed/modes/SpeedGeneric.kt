@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,27 +29,27 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
 
-class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("YPort", parent) {
+class SpeedSpeedYPort(override val parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent) {
 
     private val speed by float("Speed", 0.4f, 0.1f..1f)
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
         if (!player.onGround() && player.moving) {
-            player.setDeltaMovement(player.deltaMovement.copy(y = -1.0))
+            player.deltaMovement = player.deltaMovement.copy(y = -1.0)
         }
     }
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
     }
 
 }
 
-class SpeedLegitHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("LegitHop", parent)
+class SpeedLegitHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("LegitHop", parent)
 
-open class SpeedBHopBase(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
+open class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*>) : Mode(name) {
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->

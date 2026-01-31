@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -57,9 +57,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.network.chat.Component
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -69,7 +69,7 @@ import net.minecraft.world.phys.Vec3
  * Allows you to see server-sided rotations.
  */
 
-object ModuleDebug : ClientModule("Debug", Category.RENDER) {
+object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     private val parameters by boolean("Parameters", true).onChanged { _ ->
         debugParameters.clear()
@@ -83,7 +83,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
+    object RenderSimulatedPlayer : ToggleableValueGroup(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
 
@@ -100,15 +100,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 drawLineStrip(
-                    Color4b.BLUE.toARGB(),
-                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                    Color4b.BLUE.argb,
+                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
                 )
             }
         }
 
     }
 
-    object Graph : ToggleableConfigurable(this, "Graph", false) {
+    object Graph : ToggleableValueGroup(this, "Graph", false) {
 
         private val curve = curve(
             "Curve", mutableListOf(
@@ -129,13 +129,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 var posX = 300
                 var posY = 500
 
-                fontRenderer.draw(
-                    fontRenderer.process("Graph"),
-                    posX.toFloat(),
-                    posY.toFloat(),
-                    shadow = true,
+                fontRenderer.draw("Graph".asPlainText()) {
+                    x = posX.toFloat()
+                    y = posY.toFloat()
+                    shadow = true
                     scale = 0.3f
-                )
+                }
 
                 curve.xAxis.range.step(0.1f).forEachFloat { x ->
                     var y = curve.transform(x)
@@ -295,23 +294,21 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
         with(event.context) {
             // Draw
-            fontRenderer.draw(
-                fontRenderer.process("Debugging"),
-                120f,
-                22f,
-                shadow = true,
+            fontRenderer.draw("Debugging".asPlainText()) {
+                x = 120f
+                y = 22f
+                shadow = true
                 scale = 0.3f
-            )
+            }
 
             // Draw text line one by one
             textList.forEachIndexed { index, text ->
-                fontRenderer.draw(
-                    fontRenderer.process(text),
-                    120f,
-                    40 + ((fontRenderer.height * 0.17f) * index),
-                    shadow = true,
+                fontRenderer.draw(text) {
+                    x = 120f
+                    y = 40 + ((fontRenderer.height * 0.17f) * index)
+                    shadow = true
                     scale = 0.17f
-                )
+                }
             }
         }
     }
@@ -326,7 +323,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 
@@ -342,7 +339,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 
@@ -372,9 +369,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
         override fun render(env: WorldRenderEnvironment) {
             env.drawLine(
-                env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3(),
-                color.toARGB(),
+                env.relativeToCamera(from).toVec3f(),
+                env.relativeToCamera(to).toVec3f(),
+                color.argb,
             )
         }
     }
@@ -387,10 +384,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     ) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.drawTriangle(
-                p1 = env.relativeToCamera(p1).toVec3(),
-                p2 = env.relativeToCamera(p2).toVec3(),
-                p3 = env.relativeToCamera(p2).toVec3(),
-                argb = color.toARGB(),
+                p1 = env.relativeToCamera(p1).toVec3f(),
+                p2 = env.relativeToCamera(p2).toVec3f(),
+                p3 = env.relativeToCamera(p2).toVec3f(),
+                argb = color.argb,
             )
         }
     }
@@ -398,9 +395,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     class DebuggedLineSegment(val from: Vec3, val to: Vec3, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.drawLine(
-                env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3(),
-                color.toARGB(),
+                env.relativeToCamera(from).toVec3f(),
+                env.relativeToCamera(to).toVec3f(),
+                color.argb,
             )
         }
     }

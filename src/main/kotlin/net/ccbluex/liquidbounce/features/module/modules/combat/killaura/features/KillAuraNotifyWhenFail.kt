@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.ObjectLongMutablePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
 import net.ccbluex.liquidbounce.render.drawBox
@@ -34,9 +35,8 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
-import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.world.entity.Entity
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -45,8 +45,8 @@ internal object KillAuraNotifyWhenFail {
     internal val failedHits = ArrayDeque<ObjectLongMutablePair<Vec3>>()
     var failedHitsIncrement = 0
 
-    object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Box : Mode("Box") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
         val fadeSeconds by int("Fade", 4, 1..10, "secs")
@@ -55,8 +55,8 @@ internal object KillAuraNotifyWhenFail {
         val colorRainbow by boolean("Rainbow", false)
     }
 
-    object Sound : Choice("Sound") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Sound : Mode("Sound") {
+        override val parent: ModeValueGroup<Mode>
             get() = mode
 
         val volume by float("Volume", 50f, 0f..100f)
@@ -70,7 +70,7 @@ internal object KillAuraNotifyWhenFail {
     fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
         failedHitsIncrement++
 
-        when (mode.activeChoice) {
+        when (mode.activeMode) {
             Box -> {
                 val centerDistance = entity.box.center.subtract(player.eyePosition).length()
                 val boxSpot = player.eyePosition.add(rotation.directionVector.scale(centerDistance))

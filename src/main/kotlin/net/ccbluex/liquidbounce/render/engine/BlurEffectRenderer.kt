@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -35,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import com.mojang.blaze3d.pipeline.TextureTarget
 import net.minecraft.client.gui.screens.ChatScreen
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
@@ -80,6 +80,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         std140Size = { float + float + float },
     ).slice()
 
+    private var lastBlurRadius = Float.MIN_VALUE
+    private var lastAlphaBlendRange = 0f..1f
+
     private fun hasNoFullScreen(): Boolean =
         mc.screen == null || mc.screen is ChatScreen || FeatureSilentScreen.shouldHide
 
@@ -92,41 +95,39 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
         isDrawingHudFramebuffer = false
 
-        // Draw blur areas
-        GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
-            putFloat(getBlurRadius())
-            putFloat(ModuleHud.Blur.alphaBlendRange.start)
-            putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
+        // Write UBO
+        val blurRadius = getBlurRadius()
+        val alphaBlendRange = ModuleHud.Blur.alphaBlendRange
+        if (blurRadius != lastBlurRadius || alphaBlendRange != lastAlphaBlendRange) {
+            GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
+                putFloat(blurRadius)
+                putFloat(ModuleHud.Blur.alphaBlendRange.start)
+                putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
+            }
+            lastBlurRadius = blurRadius
+            lastAlphaBlendRange = alphaBlendRange
         }
 
-        mc.mainRenderTarget.createRenderPass({ "GUI blur pass" }).use { pass ->
-            pass.setPipeline(ClientRenderPipelines.GuiBlur)
-            pass.bindTexture("texture0", mc.mainRenderTarget.colorTextureView, overlaySampler)
-            pass.bindTexture("overlay", overlayFramebuffer.colorTextureView, overlaySampler)
-            pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
-            pass.draw(0, 3)
-        }
+        mc.mainRenderTarget
+            .createRenderPass({ "GUI blur pass" })
+            .use { pass ->
+                // Draw blur areas
+                pass.setPipeline(ClientRenderPipelines.GuiBlur)
+                pass.bindTexture("texture0", mc.mainRenderTarget.colorTextureView, overlaySampler)
+                pass.bindTexture("overlay", overlayFramebuffer.colorTextureView, overlaySampler)
+                pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
+                pass.draw(0, 3)
+            }
 
-        // overlayFramebuffer ---blit--> mc.framebuffer
-        drawOverlayBlit()
-    }
-
-    /**
-     * Draws a blit using a custom JCEF-compatible blending pipeline.
-     * Replaces the call to `overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)`.
-     *
-     * @see net.minecraft.client.gl.Framebuffer.drawBlit
-     */
-    private fun drawOverlayBlit() {
-        mc.mainRenderTarget.colorTextureView!!.createRenderPass(
-            { "GUI blur overlay blit pass" },
-        ).use { renderPass ->
-            renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
-            RenderSystem.bindDefaultUniforms(renderPass)
-
-            renderPass.bindTexture("InSampler", overlayFramebuffer.colorTextureView, overlaySampler)
-            renderPass.draw(0, 3)
-        }
+        mc.mainRenderTarget.colorTextureView!!
+            .createRenderPass({ "GUI blur overlay blit pass" })
+            .use { pass ->
+                // Blit overlay texture
+                // @see RenderTarget.blitAndBlendToTexture
+                pass.setPipeline(ClientRenderPipelines.JCEF.Blit)
+                pass.bindTexture("InSampler", overlayFramebuffer.colorTextureView, overlaySampler)
+                pass.draw(0, 3)
+            }
     }
 
     private fun getBlurRadiusFactor(): Float {
@@ -146,7 +147,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     private fun getBlurRadius(): Float {
-        return (this.getBlurRadiusFactor() * 20.0F).coerceIn(5.0F..20.0F)
+        return (this.getBlurRadiusFactor() * 20.0F).coerceIn(5.0F, 20.0F)
     }
 
 }

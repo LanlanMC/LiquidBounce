@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.item.Items
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura as KillAura
 
@@ -40,7 +40,7 @@ private var fireworkCooldown = 750
 private val fireworkChronometer = Chronometer()
 
 @Suppress("MagicNumber")
-internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoFirework", true) {
+internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFirework", true) {
     private val useMode by enumChoice("UseMode", FireworkUseMode.NORMAL)
     private val extraDistance by float("ExtraDistance", 50f, 5f..100f, suffix = "m")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
@@ -58,10 +58,10 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
         if (!KillAura.running
             || !syncCooldownWithKillAura
             || (
-                KillAura.clickScheduler.isClickTick
+                KillAura.clicker.isClickTick
                 && KillAura.targetTracker.target
                     ?.squaredBoxedDistanceTo(player)
-                    ?.takeIf { it >= KillAura.range * KillAura.range } != null
+                    ?.takeIf { it >= KillAura.range.interactionRange.sq() } != null
                 )
         ) {
             return true
@@ -72,7 +72,7 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
          * We can use the firework on the next tick.
          * After killaura performed the click
          */
-        return if (KillAura.clickScheduler.isClickTick) {
+        return if (KillAura.clicker.isClickTick) {
             waitTicks(1)
             true
         } else {

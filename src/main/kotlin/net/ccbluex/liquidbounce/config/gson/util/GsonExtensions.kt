@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,33 +93,33 @@ inline fun jsonArray(
     builderAction: JsonArrayBuilder.() -> Unit
 ) = JsonArrayBuilder(initialCapacity).apply(builderAction).build()
 
-class JsonObjectBuilder {
-    private val backend = JsonObject()
+@JvmInline
+value class JsonObjectBuilder(private val backend: JsonObject) {
 
-    infix fun String.to(value: JsonElement) {
+    operator fun String.invoke(value: JsonElement?) {
         backend.add(this, value)
     }
 
-    infix fun String.to(value: Char) {
+    operator fun String.invoke(value: Char?) {
         backend.addProperty(this, value)
     }
 
-    infix fun String.to(value: Number) {
+    operator fun String.invoke(value: Number?) {
         backend.addProperty(this, value)
     }
 
-    infix fun String.to(value: String) {
+    operator fun String.invoke(value: String?) {
         backend.addProperty(this, value)
     }
 
-    infix fun String.to(value: Boolean) {
+    operator fun String.invoke(value: Boolean?) {
         backend.addProperty(this, value)
     }
 
     /**
      * Fallback
      */
-    infix fun String.to(value: Any?) {
+    operator fun String.invoke(value: Any?) {
         when (value) {
             null -> backend.add(this, JsonNull.INSTANCE)
             is String -> backend.addProperty(this, value)
@@ -134,6 +134,6 @@ class JsonObjectBuilder {
     fun build() = backend
 }
 
-inline fun json(
+inline fun jsonObject(
     builderAction: JsonObjectBuilder.() -> Unit
-) = JsonObjectBuilder().apply(builderAction).build()
+) = JsonObjectBuilder(JsonObject()).apply(builderAction).build()

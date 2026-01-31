@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 import kotlin.math.min
@@ -43,6 +43,17 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
+fun AABB.centerPointOf(side: Direction): Vec3 {
+    return when (side) {
+        Direction.DOWN -> Vec3(minX + xsize * 0.5, minY, minZ + zsize * 0.5)
+        Direction.UP -> Vec3(minX + xsize * 0.5, maxY, minZ + zsize * 0.5)
+        Direction.NORTH -> Vec3(minX + xsize * 0.5, minY + ysize * 0.5, minZ)
+        Direction.SOUTH -> Vec3(minX + xsize * 0.5, minY + ysize * 0.5, maxZ)
+        Direction.WEST -> Vec3(minX, minY + ysize * 0.5, minZ + zsize * 0.5)
+        Direction.EAST -> Vec3(maxX, minY + ysize * 0.5, minZ + zsize * 0.5)
+    }
+}
+
 /**
  * Tests if the infinite line resulting from [start] and the point [p] will intersect this box.
  */
@@ -59,7 +70,7 @@ fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
         val p0 = axis.choose(start.x, start.y, start.z)
 
         // parallel and outside, no need to check anything else
-        if (d1 == 0.0 && (p0 < min || p0 > max)) {
+        if (d1 == 0.0 && (p0 !in min..max)) {
             return true
         }
 

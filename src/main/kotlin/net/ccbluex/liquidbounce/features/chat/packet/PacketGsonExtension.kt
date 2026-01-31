@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.chat.packet
 
@@ -28,6 +26,7 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.config.gson.util.jsonObject
 import java.lang.reflect.Type
 
 /**
@@ -35,18 +34,18 @@ import java.lang.reflect.Type
  *
  * Allows serializing packets from class to json
  */
-class PacketSerializer : JsonSerializer<Packet> {
+class PacketSerializer : JsonSerializer<AxochatPacket> {
 
-    private val packetRegistry = hashMapOf<Class<out Packet>, String>()
+    private val packetRegistry = hashMapOf<Class<out AxochatPacket>, String>()
 
     /**
      * Register packet
      */
-    fun registerPacket(packetName: String, packetClass: Class<out Packet>) {
+    fun registerPacket(packetName: String, packetClass: Class<out AxochatPacket>) {
         packetRegistry[packetClass] = packetName
     }
 
-    inline fun <reified T : Packet> register(name: String) {
+    inline fun <reified T : AxochatPacket> register(name: String) {
         registerPacket(name, T::class.java)
     }
 
@@ -65,12 +64,15 @@ class PacketSerializer : JsonSerializer<Packet> {
      * @param typeOfSrc the actual type (fully genericized version) of the source object.
      * @return a JsonElement corresponding to the specified object.
      */
-    override fun serialize(src: Packet, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+    override fun serialize(src: AxochatPacket, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val packetName = packetRegistry.getOrDefault(src.javaClass, "UNKNOWN")
-        val serializedPacket =
-            SerializedPacket(packetName, if (src.javaClass.constructors.none { it.parameterCount != 0 }) null else src)
 
-        return publicGson.toJsonTree(serializedPacket)
+        return jsonObject {
+            "m"(packetName)
+            if (src.javaClass.constructors.any { it.parameterCount != 0 }) {
+                "c"(context.serialize(src))
+            }
+        }
     }
 
 }
@@ -80,18 +82,18 @@ class PacketSerializer : JsonSerializer<Packet> {
  *
  * Allows deserializing packets from json to class
  */
-class PacketDeserializer : JsonDeserializer<Packet> {
+class PacketDeserializer : JsonDeserializer<AxochatPacket> {
 
-    private val packetRegistry = hashMapOf<String, Class<out Packet>>()
+    private val packetRegistry = hashMapOf<String, Class<out AxochatPacket>>()
 
     /**
      * Register packet
      */
-    fun registerPacket(packetName: String, packetClass: Class<out Packet>) {
+    fun registerPacket(packetName: String, packetClass: Class<out AxochatPacket>) {
         packetRegistry[packetName] = packetClass
     }
 
-    inline fun <reified T : Packet> register(name: String) {
+    inline fun <reified T : AxochatPacket> register(name: String) {
         registerPacket(name, T::class.java)
     }
 
@@ -110,7 +112,7 @@ class PacketDeserializer : JsonDeserializer<Packet> {
      * @return a deserialized object of the specified type typeOfT which is a subclass of `T`
      * @throws JsonParseException if json is not in the expected format of `typeofT`
      */
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext?): Packet? {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext?): AxochatPacket? {
         val packetObject = json.asJsonObject
         val packetName = packetObject.get("m").asString
 

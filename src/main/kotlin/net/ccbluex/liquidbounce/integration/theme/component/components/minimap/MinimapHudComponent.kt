@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -43,13 +41,13 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.level.ChunkPos
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.phys.Vec2
 import kotlin.math.ceil
 
@@ -72,11 +70,11 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
 
-    private object TextureConfigurable : ToggleableConfigurable(this, "Texture", true) {
+    private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
     }
 
-    private object EntityConfigurable : ToggleableConfigurable(this, "Entity", true) {
+    private object EntityValueGroup : ToggleableValueGroup(this, "Entity", true) {
         val scale by float("Scale", 1f, 0.25F..4F)
     }
 
@@ -84,7 +82,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         name: String,
         private val size: Float,
         private val draw: Renderer,
-    ) : ToggleableConfigurable(this, name, false) {
+    ) : ToggleableValueGroup(this, name, false) {
         val placement by enumChoice("Placement", Placement.TOP_LEFT)
 
         fun render(ctx: GuiGraphics, boundingBox: BoundingBox2f) {
@@ -101,7 +99,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             }
         }
 
-        private enum class Placement(override val choiceName: String) : NamedChoice {
+        private enum class Placement(override val tag: String) : Tagged {
             TOP_LEFT("TopLeft"),
             TOP_RIGHT("TopRight"),
             BOTTOM_LEFT("BottomLeft"),
@@ -126,8 +124,8 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     private val CLOCK = Items.CLOCK.defaultInstance
 
     init {
-        tree(TextureConfigurable)
-        tree(EntityConfigurable)
+        tree(TextureValueGroup)
+        tree(EntityValueGroup)
         extraElements.forEach(::tree)
         ChunkRenderer
         registerComponentListen(this)
@@ -193,7 +191,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                 element.render(this, boundingBox)
             }
 
-            val from = Color4b.BLACK.copy(a = 100)
+            val from = Color4b.DEFAULT_BG_COLOR
             val to = Color4b.TRANSPARENT
 
             drawShadowForBB(boundingBox, bounds, from, to)
@@ -216,7 +214,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                 boundingBox.xMax, boundingBox.yMax,
             )
 
-            drawLines(lines, Color4b.WHITE.toARGB(), bounds)
+            drawLines(lines, Color4b.WHITE.argb, bounds)
         }
     }
 
@@ -228,8 +226,8 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         offset: Float = 3.0F,
         width: Float = 3.0F,
     ) {
-        val from = from.toARGB()
-        val to = to.toARGB()
+        val from = from.argb
+        val to = to.argb
 
         drawCustomElement(
             pipeline = RenderPipelines.GUI,
@@ -269,7 +267,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
-        if (!TextureConfigurable.enabled) {
+        if (!TextureValueGroup.enabled) {
             return
         }
 
@@ -292,7 +290,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     val fromY = z.toFloat()
                     val toX = fromX + 1F
                     val toY = fromY + 1F
-                    val color = TextureConfigurable.vertexColor.toARGB()
+                    val color = TextureValueGroup.vertexColor.argb
 
                     addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
                         .setColor(color)
@@ -312,7 +310,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         baseX: Float,
         baseZ: Float,
     ) {
-        if (!EntityConfigurable.enabled) {
+        if (!EntityValueGroup.enabled) {
             return
         }
 
@@ -327,7 +325,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             pose().pushMatrix()
             pose().translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
             pose().rotate(rot.yaw.toRadians())
-            pose().scale(EntityConfigurable.scale)
+            pose().scale(EntityValueGroup.scale)
 
             val w = 2.0f
             val h = w * 1.618f

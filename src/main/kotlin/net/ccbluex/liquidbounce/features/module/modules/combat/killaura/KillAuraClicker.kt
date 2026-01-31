@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
@@ -89,9 +89,8 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             val isExitingRange = !canSeeBox(
                 eyes = ownEyePos,
                 box = targetBox,
-                // Do not care about scan range
-                range = ModuleKillAura.range.toDouble(),
-                wallsRange = ModuleKillAura.wallRange.toDouble()
+                range = ModuleKillAura.range.interactionRange.toDouble(),
+                wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
             )
             debugParameter("Is Exiting Range On ${round(ticks)}") { isExitingRange }
             if (isExitingRange) {
@@ -156,7 +155,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                 return true
             }
 
-            if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
                 network.send(
                     PosRot(
                         player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.onGround(),
@@ -168,7 +167,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         }
 
         fun unprepare() {
-            if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
+            if (rotationTiming == KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK && rotation != null) {
                 network.send(
                     PosRot(
                         player.x, player.y, player.z, player.withFixedYaw(rotation), player.xRot, player.onGround(),

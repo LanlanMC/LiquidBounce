@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
@@ -51,6 +52,7 @@ import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerDataEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerInventoryEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
@@ -110,7 +112,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -129,6 +130,8 @@ import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
+import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
+import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
@@ -226,6 +229,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     FpsChangeEvent::class.java,
     FpsLimitEvent::class.java,
     ClientPlayerDataEvent::class.java,
+    ClientPlayerEffectEvent::class.java,
     RotationUpdateEvent::class.java,
     RefreshArrayListEvent::class.java,
     BrowserReadyEvent::class.java,
@@ -255,13 +259,15 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     EntityEquipmentChangeEvent::class.java,
     ClickGuiValueChangeEvent::class.java,
     BlockAttackEvent::class.java,
-    QueuePacketEvent::class.java,
+    BlinkPacketEvent::class.java,
     AllowAutoJumpEvent::class.java,
     WorldEntityRemoveEvent::class.java,
     TitleEvent.Title::class.java,
     TitleEvent.Subtitle::class.java,
     TitleEvent.Fade::class.java,
-    TitleEvent.Clear::class.java
+    TitleEvent.Clear::class.java,
+    UserLoggedInEvent::class.java,
+    UserLoggedOutEvent::class.java,
 )
 
 /**
@@ -346,7 +352,12 @@ object EventManager {
                     additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
                 )
             } catch (e: Throwable) {
-                logger.error("Exception while executing event handler", e)
+                logger.error(
+                    "Exception while executing event handler of {}, event={}",
+                    eventHook.handlerClass.javaClass.simpleName,
+                    event,
+                    e,
+                )
             }
         }
         event.isCompleted = true

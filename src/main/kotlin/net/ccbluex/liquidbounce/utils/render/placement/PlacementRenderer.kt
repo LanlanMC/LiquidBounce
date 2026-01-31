@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render.placement
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -46,7 +46,7 @@ open class PlacementRenderer(
     val keep: Boolean = true,
     clump: Boolean = true,
     defaultColor: Color4b = Color4b(0, 255, 0, 90)
-) : ToggleableConfigurable(module, name, enabled) {
+) : ToggleableValueGroup(module, name, enabled) {
 
     val clump by boolean("Clump", clump)
 
@@ -98,7 +98,7 @@ open class PlacementRenderer(
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      * @param handlerId To which handler the block should be added.
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = pos.outlineBox, handlerId: Int = 0) {
@@ -114,7 +114,7 @@ open class PlacementRenderer(
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      * @param handlerId From which handler the block should be removed.
      */
     fun removeBlock(pos: BlockPos, handlerId: Int = 0) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,27 +21,29 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
+import com.google.common.base.Suppliers
+import com.google.common.util.concurrent.Runnables
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.GpuSampler
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.MeshData
-import net.minecraft.client.renderer.texture.AbstractTexture
-import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.gui.render.TextureSetup
-import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
-import net.minecraft.util.Util
 import net.minecraft.util.ARGB
+import net.minecraft.util.Util
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -92,14 +94,51 @@ inline fun RenderTarget.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) 
     }
 }
 
-inline fun GpuTexture.asView(): GpuTextureView =
-    gpuDevice.createTextureView(this)
+inline fun GpuTexture.asView(baseMipLevel: Int = 0, mipLevels: Int = this.mipLevels): GpuTextureView =
+    gpuDevice.createTextureView(this, baseMipLevel, mipLevels)
 
 inline fun GpuBuffer.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
     gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
 
 inline fun GpuBufferSlice.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
     gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+
+inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
+    gpuDevice.createCommandEncoder().writeToBuffer(this, byteBuffer)
+
+inline fun GpuBufferSlice.copyFrom(source: GpuBufferSlice) =
+    gpuDevice.createCommandEncoder().copyToBuffer(this, source)
+
+@Suppress("LongParameterList")
+inline fun GpuTexture.write(
+    source: NativeImage,
+    mipLevel: Int = 0,
+    depthOrLayer: Int = 0,
+    destX: Int = 0,
+    destY: Int = 0,
+    width: Int = getWidth(mipLevel),
+    height: Int = getWidth(mipLevel),
+    sourceX: Int = 0,
+    sourceY: Int = 0,
+) = gpuDevice.createCommandEncoder().writeToTexture(
+    this, source,
+    mipLevel, depthOrLayer,
+    destX, destY, width, height, sourceX, sourceY,
+)
+
+inline fun GpuTexture.copyTo(
+    destination: GpuBuffer,
+    offset: Long = 0L,
+    mipLevel: Int = 0,
+    x: Int = 0,
+    y: Int = 0,
+    width: Int = getWidth(0),
+    height: Int = getHeight(0),
+    callback: Runnable = Runnables.doNothing(),
+) = gpuDevice.createCommandEncoder().copyTextureToBuffer(
+    this, destination, offset, callback, mipLevel,
+    x, y, width, height,
+)
 
 @JvmOverloads
 fun GpuTexture.copyFully(
@@ -155,7 +194,7 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
         width * height * pixelSize.toLong()
     )
 
-    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
+    this.copyTo(gpuBuffer, mipLevel = mipLevel) {
         gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
             val nativeImage = NativeImage(width, height, false)
             for (y in 0..<height) {
@@ -167,7 +206,7 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
             future.complete(nativeImage)
         }
         gpuBuffer.close()
-    }, mipLevel)
+    }
 
     return future
 }
@@ -184,7 +223,7 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
         width * height * pixelSize.toLong()
     )
 
-    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
+    this.copyTo(gpuBuffer, mipLevel = mipLevel) {
         gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
             val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
             for (y in 0..<height) {
@@ -196,7 +235,7 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
             future.complete(bufferedImage)
         }
         gpuBuffer.close()
-    }, mipLevel)
+    }
 
     return future
 }
@@ -205,9 +244,9 @@ fun DynamicTexture.uploadRect(
     mipLevel: Int,
     x: Int, y: Int,
     width: Int, height: Int,
-) = gpuDevice.createCommandEncoder().writeToTexture(
-    this.texture, this.pixels!!,
-    mipLevel, 0,
+) = this.texture.write(
+    source = this.pixels!!,
+    mipLevel, depthOrLayer = 0,
     x, y,
     width, height,
     x, y,
@@ -247,24 +286,27 @@ fun NativeImage.registerTexture(identifier: Identifier) {
 
 inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
 
-@JvmOverloads
 inline fun NativeImage.asTexture(
+    name: String = "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})",
+) = DynamicTexture(Suppliers.ofInstance(name), this)
+
+@JvmOverloads
+fun NativeImage.asTexture(
     nameSupplier: Supplier<String> = Supplier {
-        "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})"
+        "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})"
     },
 ) = DynamicTexture(nameSupplier, this)
 
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)
 
-@JvmOverloads
-fun MeshData.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
-    gpuDevice.createBuffer(
-        labelGetter,
-        GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_COPY_DST,
-        it.vertexBuffer()
-    )
-}
+inline fun GpuTextureView.asTextureSetup(sampler: GpuSampler) =
+    TextureSetup.singleTexture(this, sampler)
+
+inline fun ByteBuffer.toGpuBuffer(
+    labelGetter: Supplier<String>? = null,
+    usage: @GpuBuffer.Usage Int,
+): GpuBuffer = gpuDevice.createBuffer(labelGetter, usage, this)
 
 @JvmInline
 value class KStd140SizeCalculator(val j: Std140SizeCalculator) {

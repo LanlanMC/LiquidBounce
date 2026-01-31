@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,13 +44,16 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.HitResult
+import net.ccbluex.liquidbounce.utils.raytracing.facingBlock
+import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.math.max
 
 private val ITERATION_PROPORTIONS = 0.05..0.95 step 0.1
@@ -215,7 +218,7 @@ object BoxVisibilityPredicate : VisibilityPredicate, DebuggedOwner {
     ): Boolean {
 //        debugGeometry("TargetSpot") { ModuleDebug.DebuggedPoint(targetSpot, color = Color4b.LIQUID_BOUNCE) }
 
-        return canSeePointFrom(eyesPos, targetSpot)
+        return hasLineOfSight(eyesPos, targetSpot)
     }
 }
 
@@ -418,7 +421,7 @@ fun canSeeBox(eyes: Vec3, box: AABB, range: Double, wallsRange: Double, expected
             if (expectedTarget != null) {
                 facingBlock(eyes, posInBox, expectedTarget)
             } else {
-                canSeePointFrom(eyes, posInBox)
+                hasLineOfSight(eyes, posInBox)
             }
 
         // skip because not visible in range
@@ -617,7 +620,7 @@ private fun checkCurrentRotation(
     val distance = eyes.distanceToSqr(pos)
 
     val visibleThroughWalls = distance <= wallsRange.sq() ||
-        facingBlock(eyes, pos, expectedTarget, currentHit.direction)
+            facingBlock(eyes, pos, expectedTarget, currentHit.direction)
 
     if (intersects && distance <= range.sq() && visibleThroughWalls) {
         val rotation = Rotation.lookingAt(point = pos, from = eyes)

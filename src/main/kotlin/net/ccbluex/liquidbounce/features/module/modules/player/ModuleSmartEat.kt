@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -36,12 +36,12 @@ import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.resources.Identifier
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemUseAnimation
-import net.minecraft.world.InteractionResult
-import net.minecraft.resources.Identifier
+import net.minecraft.world.item.Items
 
 /**
  * SmartEat module
@@ -49,7 +49,7 @@ import net.minecraft.resources.Identifier
  * Makes it easier to eat
  */
 
-object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
+object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
 
     private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.parse("hud/hotbar_offhand_left")
 
@@ -121,8 +121,8 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
         }
     }
 
-    private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
-        private object RenderSlot : ToggleableConfigurable(this, "RenderSlot", true) {
+    private object SilentOffhand : ToggleableValueGroup(this, "SilentOffhand", true) {
+        private object RenderSlot : ToggleableValueGroup(this, "RenderSlot", true) {
 
             private val offset by int("Offset", 40, 30..70)
 
@@ -205,7 +205,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
     }
 
-    private object AutoEat : ToggleableConfigurable(this, "AutoEat", true) {
+    private object AutoEat : ToggleableValueGroup(this, "AutoEat", true) {
 
         private val minHunger by int("MinHunger", 15, 0..20)
         private var forceUseKey = false

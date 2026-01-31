@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -35,18 +36,18 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
-import net.minecraft.network.protocol.game.ClientboundLoginPacket
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket
-import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.phys.AABB
 
-object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
+object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.RENDER) {
     var playHurt = false
     var playBow = false
 
@@ -58,7 +59,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         )
 
     private val currentMode: MurderMysteryMode
-        get() = this.modes.activeChoice
+        get() = this.modes.activeMode
 
     override fun onDisabled() {
         this.reset()
@@ -84,7 +85,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
-            world.entitiesForRendering().filterIsInstance<ArmorStand>().forEach {
+            world.entitiesForRendering().forEachIsInstance<ArmorStand> {
                 if (it.getItemBySlot(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
                     renderDroppedBowBox(event.partialTicks, it)
                 }

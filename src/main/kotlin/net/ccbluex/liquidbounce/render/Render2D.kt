@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,25 +22,33 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import it.unimi.dsi.fastutil.floats.Float2IntFunction
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.render.CircleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.LineGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.gui.render.state.BlitRenderState
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
+import org.joml.Vector2f
+
+private val LEFT_TOP = Vector2f()
+private val RIGHT_TOP = Vector2f()
+private val LEFT_BOTTOM = Vector2f()
+private val RIGHT_BOTTOM = Vector2f()
 
 /**
  * Primitive version of [ScreenRectangle.transformMaxBounds]
@@ -53,19 +61,15 @@ private fun Matrix3x2f.transformEachVertex(
     val top = otherAxis
     val bottom = otherAxis + height
 
-    val vector2f = transformPosition(left.toFloat(), top.toFloat(), Pools.Vec2f.borrow())
-    val vector2f2 = transformPosition(right.toFloat(), top.toFloat(), Pools.Vec2f.borrow())
-    val vector2f3 = transformPosition(left.toFloat(), bottom.toFloat(), Pools.Vec2f.borrow())
-    val vector2f4 = transformPosition(right.toFloat(), bottom.toFloat(), Pools.Vec2f.borrow())
-    val f = minOf(vector2f.x, vector2f3.x, vector2f2.x, vector2f4.x)
-    val g = maxOf(vector2f.x, vector2f3.x, vector2f2.x, vector2f4.x)
-    val h = minOf(vector2f.y, vector2f3.y, vector2f2.y, vector2f4.y)
-    val i = maxOf(vector2f.y, vector2f3.y, vector2f2.y, vector2f4.y)
-    Pools.Vec2f.recycle(vector2f)
-    Pools.Vec2f.recycle(vector2f2)
-    Pools.Vec2f.recycle(vector2f3)
-    Pools.Vec2f.recycle(vector2f4)
-    return ScreenRectangle(f.floorToInt(), h.floorToInt(), (g - f).ceilToInt(), (i - h).ceilToInt())
+    val v1 = transformPosition(left.toFloat(), top.toFloat(), LEFT_TOP)
+    val v2 = transformPosition(right.toFloat(), top.toFloat(), RIGHT_TOP)
+    val v3 = transformPosition(left.toFloat(), bottom.toFloat(), LEFT_BOTTOM)
+    val v4 = transformPosition(right.toFloat(), bottom.toFloat(), RIGHT_BOTTOM)
+    val minX = minOf(v1.x, minOf(v3.x, v2.x, v4.x))
+    val maxX = maxOf(v1.x, maxOf(v3.x, v2.x, v4.x))
+    val minY = minOf(v1.y, minOf(v3.y, v2.y, v4.y))
+    val maxY = maxOf(v1.y, maxOf(v3.y, v2.y, v4.y))
+    return ScreenRectangle(minX.floorToInt(), minY.floorToInt(), (maxX - minX).ceilToInt(), (maxY - minY).ceilToInt())
 }
 
 /**
@@ -160,7 +164,7 @@ fun GuiGraphics.drawQuad(
                 y11,
                 x21,
                 y21,
-                fillColor.toARGB(),
+                fillColor.argb,
                 copyPose(),
                 this.scissorStack.peek(),
                 bounds,
@@ -168,7 +172,7 @@ fun GuiGraphics.drawQuad(
         )
     }
     if (outlineColor != null && !outlineColor.isTransparent) {
-        val argb = outlineColor.toARGB()
+        val argb = outlineColor.argb
 
         drawLines(
             floatArrayOf(
@@ -218,7 +222,7 @@ fun GuiGraphics.drawTriangle(
         this.guiRenderState.submitGuiElement(
             TriangleGuiElementRenderState(
                 x0, y0, x1, y1, x2, y2,
-                fillColor.toARGB(),
+                fillColor.argb,
                 ClientRenderPipelines.GUI.triangles(cull),
                 copyPose(),
                 this.scissorStack.peek(),
@@ -237,7 +241,7 @@ fun GuiGraphics.drawTriangle(
                 x2, y2,
                 x0, y0,
             ),
-            outlineColor.toARGB(),
+            outlineColor.argb,
             bounds,
         )
     }
@@ -281,7 +285,7 @@ inline fun GuiGraphics.drawGlyphOnCurrentLayer(
             textureSetup,
             copyPose(),
             this.scissorStack.peek(),
-            createBounds(x0, y0, x1 - x0, y1 - y0),
+            null,
         )
     )
 }
@@ -349,7 +353,33 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
             v2,
             argb,
             this.scissorStack.peek(),
-            createBounds(x0.toFloat(), y0.toFloat(), (x1 - x0).toFloat(), (y1 - y0).toFloat()),
+            null,
+        )
+    )
+}
+
+fun GuiGraphics.drawCircle(
+    x: Float,
+    y: Float,
+    radius: Float,
+    innerRadius: Float = 0f,
+    segments: Int = 40,
+    colorGetter: Float2IntFunction = Float2IntFunction { Color4b.WHITE.argb },
+) {
+    val bounds = createBounds(x - radius, y - radius, radius * 2, radius * 2)
+
+    this.guiRenderState.submitGuiElement(
+        CircleGuiElementRenderState(
+            x,
+            y,
+            radius,
+            innerRadius,
+            segments,
+            colorGetter,
+            ClientRenderPipelines.GUI.triangles(true),
+            copyPose(),
+            this.scissorStack.peek(),
+            bounds
         )
     )
 }

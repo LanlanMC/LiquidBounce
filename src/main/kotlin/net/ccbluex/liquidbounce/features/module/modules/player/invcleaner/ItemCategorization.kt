@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
@@ -59,8 +59,6 @@ import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.level.material.LavaFluid
-import net.minecraft.world.level.material.WaterFluid
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
@@ -77,10 +75,14 @@ import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.level.material.LavaFluid
+import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
 
 @JvmRecord
-data class ItemCategory(val type: ItemType, val subtype: Int)
+data class ItemCategory(val type: ItemType, val subtype: Int) {
+    fun isEmpty(): Boolean = type == ItemType.NONE
+}
 
 enum class ItemType(
     val oneIsSufficient: Boolean,
@@ -96,7 +98,7 @@ enum class ItemType(
      */
     val allocationPriority: Priority = Priority.NORMAL,
     /**
-     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * The user maybe wants to filter the items by a specific type, but they don't always want all versions of the item.
      * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
      * If that function is already served, we can just ignore it.
      */
@@ -124,7 +126,9 @@ enum class ItemType(
     EGAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
-    NONE(false),
+    NONE(false);
+
+    val defaultCategory = ItemCategory(this, 0)
 }
 
 enum class ItemFunction {
@@ -133,37 +137,36 @@ enum class ItemFunction {
 }
 
 enum class ItemSortChoice(
-    override val choiceName: String,
-    val category: ItemCategory?,
+    override val tag: String,
+    val category: ItemCategory,
     /**
      * This is the function that is used for the greedy check.
      *
      * IF IT WAS IMPLEMENTED
      */
     val satisfactionCheck: Predicate<ItemStack>? = null,
-) : NamedChoice {
+) : Tagged {
     KNOCKBACK("Knockback", ItemCategory(ItemType.KNOCKBACK, 0),
         {it.enchantments.size() == 1 && it.getEnchantment(Enchantments.KNOCKBACK) >= 2 }),
     COBWEB("Cobweb", ItemCategory(ItemType.COBWEB, 0), {it.item == Items.COBWEB}),
     FIREBALL("Fireball", ItemCategory(ItemType.FIREBALL, 0), {it.item == Items.FIRE_CHARGE}),
-    SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
-    WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
-    SPEAR("Spear", ItemCategory(ItemType.SPEAR, 0)),
-    MACE("Mace", ItemCategory(ItemType.MACE, 0), {
-        it.item is MaceItem
-    }),
-    BOW("Bow", ItemCategory(ItemType.BOW, 0)),
-    CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
+
+    SWORD("Sword", ItemType.SWORD.defaultCategory, { it.isSword }),
+    WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
+    SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),
+    MACE("Mace", ItemType.MACE.defaultCategory, { it.item is MaceItem }),
+    BOW("Bow", ItemType.BOW.defaultCategory),
+    CROSSBOW("Crossbow", ItemType.CROSSBOW.defaultCategory),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
     PICKAXE("Pickaxe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_PICKAXE), { it.isPickaxe }),
     SHOVEL("Shovel", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_SHOVEL), { it.isShovel }),
     HOE("Hoe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_HOE), { it.isHoe }),
-    ROD("Rod", ItemCategory(ItemType.ROD, 0)),
-    SHIELD("Shield", ItemCategory(ItemType.SHIELD, 0)),
-    WATER("Water", ItemCategory(ItemType.BUCKET, 0)),
+    ROD("Rod", ItemType.ROD.defaultCategory),
+    SHIELD("Shield", ItemType.SHIELD.defaultCategory),
+    WATER("Water", ItemType.BUCKET.defaultCategory),
     LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
     MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
-    PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
+    PEARL("Pearl", ItemType.PEARL.defaultCategory, { it.item == Items.ENDER_PEARL }),
     GAPPLE(
         "Gapple",
         ItemCategory(ItemType.GAPPLE, 0),
@@ -174,12 +177,12 @@ enum class ItemSortChoice(
         ItemCategory(ItemType.EGAPPLE, 0),
         Predicate {it.item == Items.ENCHANTED_GOLDEN_APPLE }
     ),
-    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
-    POTION("Potion", ItemCategory(ItemType.POTION, 0)),
-    BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
-    THROWABLES("Throwables", ItemCategory(ItemType.THROWABLE, 0)),
-    IGNORE("Ignore", null),
-    NONE("None", null),
+    FOOD("Food", ItemType.FOOD.defaultCategory, { it.foodComponent != null }),
+    POTION("Potion", ItemType.POTION.defaultCategory),
+    BLOCK("Block", ItemType.BLOCK.defaultCategory, { it.item is BlockItem }),
+    THROWABLES("Throwables", ItemType.THROWABLE.defaultCategory),
+    IGNORE("Ignore", ItemType.NONE.defaultCategory),
+    NONE("None", ItemType.NONE.defaultCategory),
 }
 
 /**
@@ -191,7 +194,7 @@ class ItemCategorization(
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlotType.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlot.Type.ARMOR, id))
         }
 
         /**
@@ -209,7 +212,7 @@ class ItemCategorization(
     /**
      * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
      * the best ones as soon as we upgrade one of the other armor pieces.
-     * In those cases we don't want to miss out on this armor piece in the future thus we keep it.
+     * In those cases, we don't want to miss out on this armor piece in the future thus we keep it.
      */
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
@@ -262,13 +265,14 @@ class ItemCategorization(
                     }
                 }
 
-                Items.MILK_BUCKET -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
+                Items.MILK_BUCKET -> add(PrimitiveItemFacet(slot, ItemSortChoice.MILK.category))
                 is BucketItem -> {
-                    when (item.content) {
-                        is WaterFluid -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 0)))
-                        is LavaFluid -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 1)))
-                        else -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 3)))
+                    val category = when (item.content) {
+                        is WaterFluid -> ItemSortChoice.WATER.category
+                        is LavaFluid -> ItemSortChoice.LAVA.category
+                        else -> ItemCategory(ItemType.BUCKET, item.content.javaClass.hashCode())
                     }
+                    add(PrimitiveItemFacet(slot, category))
                 }
                 is PotionItem -> {
                     val areAllEffectsGood =
@@ -282,11 +286,11 @@ class ItemCategorization(
                     }
                 }
 
-                is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
+                is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemType.PEARL.defaultCategory))
 
                 Items.GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))
-                    add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)))
+                    add(PrimitiveItemFacet(slot, ItemType.GAPPLE.defaultCategory))
                 }
 
                 Items.ENCHANTED_GOLDEN_APPLE -> {

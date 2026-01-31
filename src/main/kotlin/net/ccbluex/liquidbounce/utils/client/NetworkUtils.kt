@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -29,24 +29,24 @@ import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
-import net.minecraft.client.player.LocalPlayer
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
-import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.context.UseOnContext
-import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
-import net.minecraft.world.InteractionResult
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
+import net.minecraft.world.phys.BlockHitResult
 import org.apache.commons.lang3.mutable.MutableObject
-import java.util.*
+import java.util.Objects
 
 internal fun sendStartSneaking() {
     if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
@@ -149,7 +149,7 @@ fun MultiPlayerGameMode.interactItem(
         val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yaw, pitch)
         val itemStack = player.getItemInHand(hand)
         if (player.cooldowns.isOnCooldown(itemStack)) {
-            mutableObject.setValue(InteractionResult.PASS)
+            mutableObject.value = InteractionResult.PASS
             return@startPrediction playerInteractItemC2SPacket
         }
 
@@ -166,7 +166,7 @@ fun MultiPlayerGameMode.interactItem(
             player.setItemInHand(hand, itemStack2)
         }
 
-        mutableObject.setValue(typedActionResult)
+        mutableObject.value = typedActionResult
         return@startPrediction playerInteractItemC2SPacket
     }
 
@@ -184,8 +184,8 @@ fun sendPacketSilently(packet: Packet<*>) {
     mc.connection?.connection?.send(packetEvent.packet, null)
 }
 
-enum class MovePacketType(override val choiceName: String, val generatePacket: () -> ServerboundMovePlayerPacket)
-    : NamedChoice {
+enum class MovePacketType(override val tag: String, val generatePacket: () -> ServerboundMovePlayerPacket)
+    : Tagged {
     ON_GROUND_ONLY("OnGroundOnly", {
         ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
     }),

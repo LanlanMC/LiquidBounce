@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,23 +20,23 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import java.util.*
+import java.util.EnumSet
 
 /**
  * AutoDisable module
@@ -45,7 +45,7 @@ import java.util.*
  *
  * Command: [CommandAutoDisable]
  */
-object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
+object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
     val modules: Set<ClientModule>
         field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
@@ -114,7 +114,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         }
     }
 
-    private enum class DisableOn(override val choiceName: String) : NamedChoice {
+    private enum class DisableOn(override val tag: String) : Tagged {
         FLAG("Flag"),
         DEATH("Death"),
         WORLD_CHANGE("WorldChange"),

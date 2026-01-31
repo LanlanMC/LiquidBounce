@@ -13,7 +13,7 @@
 /logs/
 /.kotlin/
 .DS_Store
-
+*.log
 yarn.lock
 /liquid-bounce-inbuilt-annotations/
 /node_modules/

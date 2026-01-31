@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
@@ -43,14 +43,14 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import org.lwjgl.glfw.GLFW
 import java.util.function.Predicate
 
@@ -59,7 +59,7 @@ import java.util.function.Predicate
  *
  * Manages your offhand.
  */
-object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf("AutoTotem")) {
+object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases = listOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val switchMode by enumChoice(
@@ -69,8 +69,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
 
-    private object Gapple : ToggleableConfigurable(this, "Gapple", true) {
-        object WhileHoldingSword : ToggleableConfigurable(this, "WhileHoldingSword", true) {
+    private object Gapple : ToggleableValueGroup(this, "Gapple", true) {
+        object WhileHoldingSword : ToggleableValueGroup(this, "WhileHoldingSword", true) {
             val onlyWhileKa by boolean("OnlyWhileKillAura", true)
         }
 
@@ -81,19 +81,19 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         }
     }
 
-    private object Crystal : ToggleableConfigurable(this, "Crystal", true) {
+    private object Crystal : ToggleableValueGroup(this, "Crystal", true) {
         val onlyWhileCa by boolean("OnlyWhileCrystalAura", false)
         val whenNoTotems by boolean("WhenNoTotems", true)
         val crystalBind by key("CrystalBind")
     }
 
-    private object Strength : ToggleableConfigurable(this, "StrengthPotion", false) {
+    private object Strength : ToggleableValueGroup(this, "StrengthPotion", false) {
         val onlyWhileHoldingSword by boolean("OnlyWhileHoldingSword", true)
         val onlyWhileKa by boolean("OnlyWhileKillAura", true)
         val strengthBind by key("StrengthBind")
     }
 
-    private object Block : ToggleableConfigurable(this, "Block", false) {
+    private object Block : ToggleableValueGroup(this, "Block", false) {
         val whileScaffold by boolean("WhileScaffold", true)
         val whileEagle by boolean("WhileEagle", true)
     }
@@ -382,9 +382,9 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
     }
 
     @Suppress("unused")
-    private enum class SwitchMode(override val choiceName: String) : NamedChoice {
+    private enum class SwitchMode(override val tag: String) : Tagged {
         /**
-         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possible send fewer packets.
+         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to send fewer packets.
          * Works on all versions.
          *
          * It's not the default because some servers kick you when you perform a SWAP_ITEM_WITH_OFFHAND action
