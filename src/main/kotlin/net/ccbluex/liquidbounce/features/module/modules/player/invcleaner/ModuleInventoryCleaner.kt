@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.item.ItemStack
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.features.FeatureHeypixelCheck
 
 /**
  * InventoryCleaner module

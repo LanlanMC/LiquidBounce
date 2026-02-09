@@ -19,20 +19,23 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isBlockUnfavourable
 import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.Direction
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.phys.HitResult
 import kotlin.math.absoluteValue
+import kotlin.time.Clock
 
 
 /**
@@ -43,7 +46,7 @@ import kotlin.math.absoluteValue
  *
  * @author LanlanMC
  */
-object ModuleSidePlace: ClientModule("SidePlace", Category.WORLD) {
+object ModuleSidePlace: ClientModule("SidePlace", ModuleCategories.WORLD) {
     val placeDelay by intRange("PlaceDelay", 1..1 , 0..5, "Ticks")
 
     val holdRight by boolean("HoldRight", false)
@@ -54,7 +57,7 @@ object ModuleSidePlace: ClientModule("SidePlace", Category.WORLD) {
      */
     val stopOnLeftClick by boolean("StopOnLeftClick", false)
 
-    private object PitchCheck: ToggleableConfigurable(this, "PitchCheck", false) {
+    private object PitchCheck: ToggleableValueGroup(this, "PitchCheck", false) {
         val pitch by floatRange("Pitch", 0f..45f, 0f..90f)
     }
 
@@ -72,25 +75,18 @@ object ModuleSidePlace: ClientModule("SidePlace", Category.WORLD) {
         placeCooldown--
         if (placeCooldown > 0) return@tickHandler  // Wait for cooldown
 
-        val heldItem = getHeldItem()
-        if (heldItem.isEmpty
-            || !isValidBlock(heldItem)
-            || ScaffoldBlockItemSelection.isBlockUnfavourable(heldItem)
-        ) {
-            return@tickHandler
-        }  //  hand item
         if (PitchCheck.enabled && 90 - player.yRot.absoluteValue !in PitchCheck.pitch) return@tickHandler  //  pitch
         if (stopOnLeftClick && mc.options.keyAttack.isPressedOnAny) return@tickHandler  //  left-click
         if (holdRight && !mc.options.keyUse.isPressedOnAny) return@tickHandler  //  right-click
 
-        val raycastResult = raycast()
+        val raycastResult = traceFromPlayer(player.rotation, range = player.blockInteractionRange())
         if (raycastResult.type != HitResult.Type.BLOCK) return@tickHandler  // Ensure the player is looking at a block
         if (raycastResult.direction in arrayOf(Direction.UP, Direction.DOWN)) return@tickHandler  // Sides only
 
         val suitableHand = arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND).firstOrNull {
-            isValidBlock(player.getItemInHand(it))
-        }
-        doPlacement(raycastResult, suitableHand!!)
+            isValidBlock(player.getItemInHand(it)) || !isBlockUnfavourable(getHeldItem())
+        }?: return@tickHandler
+        doPlacement(raycastResult, suitableHand)
         placeCooldown = placeDelay.random()
     }
 

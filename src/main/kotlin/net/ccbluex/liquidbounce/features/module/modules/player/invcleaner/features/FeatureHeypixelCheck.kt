@@ -20,7 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.minecraft.world.item.enchantment.Enchantments
@@ -34,7 +34,7 @@ import net.minecraft.world.item.Items
  * HeypixelCheck feature does some checks to detect Heypixel server's custom items, and
  * allows some extra behaviors.
  */
-object FeatureHeypixelCheck: ToggleableConfigurable(ModuleInventoryCleaner, "HeypixelCheck", false) {
+object FeatureHeypixelCheck: ToggleableValueGroup(ModuleInventoryCleaner, "HeypixelCheck", false) {
     fun isHeypixelUsefulItem(item: ItemStack): Boolean {
         return (item.item == Items.GOLDEN_AXE
             && item.damageValue >= 31
