@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
@@ -64,8 +63,8 @@ import kotlin.contracts.contract
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = (gpuDevice.renderer?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
-    gpuDevice.vendor == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = (GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
+    GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
 
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -100,6 +99,13 @@ inline fun renderEnvironmentForWorld(
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {
+    matrixStack.withPush {
+        translate(camera.position().reverse())
+        draw()
+    }
+}
+
 /**
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
@@ -123,7 +129,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw:
 /**
  * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
  */
-inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) {
+inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> Unit) {
     if (HAS_AMD_VEGA_APU) GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
     try {
         draw()
@@ -174,9 +180,9 @@ inline fun WorldRenderEnvironment.drawCustomMeshTextured(
 
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
-    drawer: VertexConsumer.(Matrix4fc) -> Unit,
+    drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
 ) {
-    val matrix = matrixStack.last().pose()
+    val matrix = matrixStack.last()
 
     val buffer = getOrCreateBuffer(pipeline)
 
@@ -184,7 +190,7 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it)
+            draw(pipeline, it, emptyMap())
         }
     }
 }
@@ -195,7 +201,7 @@ private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
         GrowableMappableRingBuffer(
             "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
             GpuBuffer.USAGE_VERTEX,
-            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 11)
+            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 13)
         )
     }
 
@@ -220,6 +226,7 @@ internal fun drawMesh(
     colorModulator: Color4b = Color4b.WHITE,
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextures: Map<String, AbstractTexture> = emptyMap(),
+    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
 ) = meshData.use { meshData ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
@@ -252,6 +259,7 @@ internal fun drawMesh(
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
         renderPass.bindTextures(shaderTextures)
+        renderPass.setUniforms(uniforms)
 
         renderPass.bindAndDraw(vertexSlice, indexSlice, pipeline.vertexFormat, indexType, indexCount)
     }
@@ -261,22 +269,48 @@ internal fun drawMesh(
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
 fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
-    drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-        addVertex(matrix, p1).setColor(argb)
-        addVertex(matrix, p2).setColor(argb)
+    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        addVertex(pose, p1).setColor(argb)
+        addVertex(pose, p2).setColor(argb)
     }
 
 /**
- * Function to draw lines using the specified [lines] vectors.
- *
- * @param lines The vectors representing the lines.
+ * Draws lines with [width].
+ * Modern GL doesn't support `glLineWidth` well, so draw with shader simulation.
  */
-fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
-    if (lines.isEmpty()) return
+fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, vararg positions: Vec3f) {
+    if (positions.isEmpty()) return
+    require(positions.size and 1 == 0)
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.LinesWithWidth) { pose ->
+        for (i in 0 until positions.size step 2) {
+            val p1 = positions[i]
+            val p2 = positions[i + 1]
+            val norm1 = (p1 - p2).normalized()
+            addVertex(pose, p1)
+                .setColor(argb)
+                .setNormal(pose, norm1)
+                .setLineWidth(width)
+            addVertex(pose, p2)
+                .setColor(argb)
+                .setNormal(pose, -norm1)
+                .setLineWidth(width)
+        }
+    }
+}
+
+/**
+ * Function to draw lines using the specified [positions] vectors.
+ *
+ * @param positions The vectors representing the lines.
+ */
+fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
+    if (positions.isEmpty()) return
+    require(positions.size and 1 == 0)
 
     drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
-        for (line in lines) {
-            addVertex(pose, line).setColor(argb)
+        for (pos in positions) {
+            addVertex(pose, pos).setColor(argb)
         }
     }
 }
@@ -300,18 +334,31 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
  * Function to draw a 'line strip' using the specified [positions] vectors,
  * actual pipeline is [ClientRenderPipelines.Lines].
  *
- * @param positions The vectors representing the line strip.
+ * @param positions The vectors representing the line strip, the size should be even.
  */
-fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, vararg positions: Vec3f) {
+fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, positions: Collection<Vec3>) {
     if (positions.isEmpty()) return
+    require(positions.size and 1 == 0)
 
     drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
         positions.forEachIndexed { index, pos ->
-            if (index != 0 && index != positions.lastIndex) {
+            if (index != 0 && index != positions.size - 1) {
                 addVertex(pose, pos).setColor(argb)
             }
             addVertex(pose, pos).setColor(argb)
         }
+    }
+}
+
+fun WorldRenderEnvironment.drawTexQuad(
+    sampler0: AbstractTexture,
+    argb: Int,
+) {
+    drawCustomMeshTextured(sampler0) { pose ->
+        addVertex(pose, -0.5f, -0.5f, 0f).setUv(0f, 0f).setColor(argb)
+        addVertex(pose, -0.5f, 0.5f, 0f).setUv(0f, 1f).setColor(argb)
+        addVertex(pose, 0.5f, 0.5f, 0f).setUv(1f, 1f).setColor(argb)
+        addVertex(pose, 0.5f, -0.5f, 0f).setUv(1f, 0f).setColor(argb)
     }
 }
 
@@ -356,14 +403,14 @@ fun WorldRenderEnvironment.drawBox(
     outlineVertices: Int = -1,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-            addBoxFaces(matrix, box, color = faceColor, verticesToUse = faceVertices)
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addBoxFaces(pose.pose(), box, color = faceColor, verticesToUse = faceVertices)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-            addBoxOutlines(matrix, box, outlineColor, outlineVertices)
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
         }
     }
 }

@@ -158,6 +158,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleChestCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
@@ -186,6 +187,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInven
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockOutline
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
@@ -509,6 +511,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAutoShop,
             ModuleAutoWalk,
             ModuleBlink,
+            ModuleChestCleaner,
             ModuleChestStealer,
             ModuleEagle,
             ModuleFastExp,
@@ -555,7 +558,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCombineMobs,
             ModuleAspect,
             ModuleAutoF5,
-//            ModuleChams,
+            ModuleChams,
             ModuleBedPlates,
             ModuleNoBob,
             ModuleNoFov,

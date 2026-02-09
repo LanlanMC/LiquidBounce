@@ -16,31 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
-import com.mojang.authlib.GameProfile
-import net.minecraft.client.multiplayer.ClientLevel
-import java.util.function.Consumer
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-/**
- * A special [FakePlayer] that moves following a recorded path
- * of [PosPoseSnapshot].
- */
-class MovingFakePlayer @JvmOverloads constructor(
-    private vararg val snapshots: PosPoseSnapshot,
-    level: ClientLevel,
-    gameProfile: GameProfile,
-    onRemoval: Consumer<in FakePlayer>? = null,
-) : FakePlayer(level, gameProfile, onRemoval) {
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import org.jspecify.annotations.NullMarked;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-    private var index: Int = 0
+@NullMarked
+@Mixin(RenderSetup.class)
+public interface MixinRenderSetupAccessor {
 
-    override fun tick() {
-        loadAttributes(snapshots[index])
-        index++
-        index %= snapshots.size
-
-        super.tick()
-    }
+    @Accessor
+    RenderSetup.OutlineProperty getOutlineProperty();
 
 }

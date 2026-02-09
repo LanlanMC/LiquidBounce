@@ -17,21 +17,21 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render.nametags
+package net.ccbluex.liquidbounce.render.utils
 
-import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.minecraft.world.entity.EquipmentSlot
+import net.ccbluex.liquidbounce.config.types.CurveValue
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 
-enum class EquipmentSlotChoice(
-    override val tag: String,
-    val slot: EquipmentSlot,
-) : Tagged {
-    MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
-    OFFHAND("Offhand", EquipmentSlot.OFFHAND),
-    FEET("Feet", EquipmentSlot.FEET),
-    LEGS("Legs", EquipmentSlot.LEGS),
-    CHEST("Chest", EquipmentSlot.CHEST),
-    HEAD("Head", EquipmentSlot.HEAD),
-    BODY("Body", EquipmentSlot.BODY),
-    SADDLE("Saddle", EquipmentSlot.SADDLE),
+abstract class AnimatedValueGroup(name: String) : ValueGroup(name) {
+    protected abstract val curve: CurveValue
+    private val period by int("Period", 1000, 10..20000, "ms")
+    private val symmetric by boolean("Symmetric", true)
+
+    fun current(): Float = if (symmetric) {
+        val p = (clientStartDurationMs % (period * 2)) / period.toFloat()
+        this.curve.transform(if (p > 1) 2f - p else p)
+    } else {
+        this.curve.transform((clientStartDurationMs % period) / period.toFloat())
+    }
 }

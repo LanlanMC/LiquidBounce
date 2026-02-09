@@ -164,7 +164,7 @@ fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.visu
     enemyConf.shouldShow(this)
 
 @JvmOverloads
-fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
+fun Entity?.shouldBeAttacked(enemyConf: EnumSet<Targets> = GlobalSettingsTarget.combat) =
     this is Attackable && enemyConf.shouldAttack(this)
 
 /**
@@ -219,7 +219,9 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
         return
     }
 
-    EventManager.callEvent(AttackEntityEvent(entity))
+    if (EventManager.callEvent(AttackEntityEvent(entity)).isCancelled) {
+        return
+    }
 
     with(player) {
         // Swing before attacking (on 1.8)

@@ -54,7 +54,7 @@ object ClientRenderPipelines {
         SourceFactor.ONE, DestFactor.ZERO,
     )
 
-    private inline fun newPipeline(
+    internal inline fun newPipeline(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
     ): RenderPipeline {
@@ -170,6 +170,16 @@ object ClientRenderPipelines {
 
         @JvmStatic
         fun triangles(cull: Boolean) = if (cull) Triangles else TrianglesNoCull
+    }
+
+    /**
+     * @see RenderPipelines.LINES_TRANSLUCENT
+     */
+    @JvmField
+    val LinesWithWidth = newPipeline("lines_with_width") {
+        withSnippet(RenderPipelines.LINES_SNIPPET)
+        withDepthWrite(false)
+        forWorldRender()
     }
 
     @JvmField
