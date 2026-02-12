@@ -163,6 +163,12 @@ object ClientRenderPipelines {
             withCull(false)
         }
 
+        @JvmField
+        val TexQuadNoCull = newPipeline("gui/tex_quad_no_cull") {
+            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+            withCull(false)
+        }
+
         @JvmStatic
         fun lines(cull: Boolean) = if (cull) Lines else LinesNoCull
 
@@ -339,8 +345,9 @@ object ClientRenderPipelines {
         withSampler("texture0")
         withSampler("overlay")
         withUniformBuffer(ClientUniformDefine.GUI_BLUR)
+        withCull(false)
         withoutBlend()
-        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         withDepthWrite(false)
     }
 
