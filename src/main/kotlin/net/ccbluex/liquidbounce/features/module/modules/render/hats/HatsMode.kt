@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
@@ -51,7 +53,9 @@ abstract class HatsMode(name: String) : Mode(name) {
         get() = modes
 
     // --- Settings ---
-    private val followRotation by boolean("FollowRotation", false)
+    private class FollowYaw : ToggleableValueGroup(null, "FollowYaw", false) {
+        val pitch by boolean("AlsoPitch", false)
+    }
 
     private class EquipOffset : ValueGroup("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
@@ -65,6 +69,8 @@ abstract class HatsMode(name: String) : Mode(name) {
         val friendView by boolean("ViewOnFriend", true)
         val distance by int("Distance", 64, 8..512, "blocks")
     }
+
+    private val followYaw = tree(FollowYaw())
 
     private val friendsOptions = tree(FriendsOptions())
 
@@ -103,7 +109,12 @@ abstract class HatsMode(name: String) : Mode(name) {
                 renderEnvironmentForWorld(it.matrixStack) {
                     withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
                         matrixStack.withPush {
-                            if (followRotation) mulPose(rotation.toQuaternion(ROTATION))
+                            if (followYaw.enabled) {
+                                mulPose(Quaternionf().rotationY(-rotation.yRot.toRadians()))
+                                if (followYaw.pitch) {
+                                    mulPose(Quaternionf().rotationX(rotation.pitch.toRadians()))
+                                }
+                            }
                             translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
                             drawHat(hurtMarked)
                         }
