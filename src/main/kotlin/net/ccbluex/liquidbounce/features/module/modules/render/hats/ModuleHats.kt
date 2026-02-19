@@ -38,7 +38,7 @@ object ModuleHats : ClientModule("Hats", ModuleCategories.RENDER) {
     object HeightOffset : AnimatedValueGroup("HeightOffset") {
         override val curve = curve("Height") {
             "Progress" x 0f..1f
-            "Offset" y 0f..2f
+            "Offset" y 0f..0.5f
             points(Vector2f(0f, 0.2f), Vector2f(1f, 0.2f))
         }
     }
