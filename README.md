@@ -11,9 +11,7 @@
 [X](https://x.com/CCBlueX)
 </div>
 
-如果你注意到任何问题或缺少某些功能，你可以通过在[这里](https://github.com/CCBlueX/LiquidBounce/issues)提交Issue。
-
-> 这是原仓库的链接，这个仓库只是我的小修改，往我的仓库提Issue大概率不会受理（没空处理）。仅当你确定问题出在原仓库时才提交Issue。
+如果你注意到任何问题或缺少某些功能，你可以通过在[这里](https://github.com/LanlanMC/LiquidBounce/issues)提交Issue。
 
 ## 许可
 
