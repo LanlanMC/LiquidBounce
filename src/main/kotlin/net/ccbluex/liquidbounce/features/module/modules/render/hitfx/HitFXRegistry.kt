@@ -38,18 +38,10 @@ object HitFXRegistry {
     val SOFT = register("soft")
     val SQUASH = register("squash")
     val MAGICSQUASH = register("magicsquash")
-
-    val CLICK = register("click-1", "click-2", "click-3")
-    val BOYKISSER = register(
-        "boykisser-1",
-        "boykisser-2",
-        "boykisser-3",
-        "boykisser-4",
-        "boykisser-5",
-        "boykisser-6"
-    )
-    val GLASS = register("glass-1", "glass-2", "glass-3")
-    val MOAN = register("moan-1", "moan-2", "moan-3", "moan-4")
+    val CLICK = register("click")
+    val BOYKISSER = register("boykisser")
+    val GLASS = register("glass")
+    val MOAN = register("moan")
 
     fun init() {
         logger.info("HitFXRegistry initialized")

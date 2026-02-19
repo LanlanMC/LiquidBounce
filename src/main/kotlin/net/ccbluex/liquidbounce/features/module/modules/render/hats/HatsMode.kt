@@ -110,9 +110,9 @@ abstract class HatsMode(name: String) : Mode(name) {
                     withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
                         matrixStack.withPush {
                             if (followYaw.enabled) {
-                                mulPose(Quaternionf().rotationY(-rotation.yRot.toRadians()))
+                                mulPose(ROTATION.rotationY(-rotation.yRot.toRadians()))
                                 if (followYaw.pitch) {
-                                    mulPose(Quaternionf().rotationX(rotation.pitch.toRadians()))
+                                    mulPose(ROTATION.rotationX(rotation.pitch.toRadians()))
                                 }
                             }
                             translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
