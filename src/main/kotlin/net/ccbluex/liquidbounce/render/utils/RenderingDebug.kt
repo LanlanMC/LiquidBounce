@@ -17,16 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.utils
 
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
-import org.joml.Matrix3x2f;
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 
-public sealed interface LiquidBounceGuiElementRenderState
-    extends GuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
-    /**
-     * Recyclable pose matrix.
-     */
-    Matrix3x2f pose();
+object RenderingDebug : DebuggedOwner {
+
+    var renderPassCount = 0
+        private set
+
+    @JvmStatic
+    fun increaseRenderPassCount() {
+        renderPassCount++
+    }
+
+    @JvmStatic
+    fun flipFrame() {
+        debugParameter("RenderPassCount") { renderPassCount }
+        renderPassCount = 0
+    }
+
 }

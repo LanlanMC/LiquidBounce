@@ -17,43 +17,70 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.gui.element;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
-public record TriangleGuiElementRenderState(
-    float x0,
-    float y0,
-    float x1,
-    float y1,
-    float x2,
-    float y2,
+public record LineGuiElementRenderState(
+    float[] points,
     int argb,
     RenderPipeline pipeline,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
-) implements LiquidBounceGuiElementRenderState {
+) implements PoseReusableGuiElementRenderState {
 
-    public TriangleGuiElementRenderState {
-        assert pipeline.getVertexFormatMode() == VertexFormat.Mode.TRIANGLES;
+    public LineGuiElementRenderState {
+        if ((points.length & 1) != 0) {
+            throw new IllegalArgumentException("Incomplete points array. It must have an even number of elements.");
+        }
+    }
+
+    public LineGuiElementRenderState(
+        Vec2[] points,
+        int argb,
+        Matrix3x2f pose,
+        RenderPipeline pipeline,
+        @Nullable ScreenRectangle scissorArea,
+        @Nullable ScreenRectangle bounds
+    ) {
+        this(
+            flat(points),
+            argb,
+            pipeline,
+            pose,
+            scissorArea,
+            bounds
+        );
     }
 
     @Override
     public void buildVertices(VertexConsumer vertices) {
-        vertices.addVertexWith2DPose(pose, x0, y0).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x1, y1).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x2, y2).setColor(argb);
+        for (int i = 0; i < points.length; i += 2) {
+            float x = points[i];
+            float y = points[i + 1];
+            vertices.addVertexWith2DPose(pose, x, y).setColor(argb);
+        }
     }
 
     @Override
     public TextureSetup textureSetup() {
         return TextureSetup.noTexture();
+    }
+
+    private static float[] flat(Vec2[] points) {
+        float[] flatPoints = new float[points.length << 1];
+        for (int i = 0; i < points.length; i++) {
+            Vec2 point = points[i];
+            flatPoints[i << 1] = point.x;
+            flatPoints[(i << 1) | 1] = point.y;
+        }
+        return flatPoints;
     }
 }

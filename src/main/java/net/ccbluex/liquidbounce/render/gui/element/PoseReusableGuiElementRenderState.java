@@ -17,25 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.gui.element;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import org.joml.Matrix3x2f;
 
-public record LambdaSimpleGuiElementRenderState(
-    RenderPipeline pipeline,
-    TextureSetup textureSetup,
-    Matrix3x2f pose,
-    @Nullable ScreenRectangle scissorArea,
-    @Nullable ScreenRectangle bounds,
-    VerticesSetupHandler verticesSetupHandler
-) implements LiquidBounceGuiElementRenderState {
-    @Override
-    public void buildVertices(VertexConsumer vertices) {
-        verticesSetupHandler.setupVertices(vertices, this.pose());
-    }
+public sealed interface PoseReusableGuiElementRenderState
+    extends GuiElementRenderState
+    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
+    /**
+     * Recyclable pose matrix.
+     */
+    Matrix3x2f pose();
 }

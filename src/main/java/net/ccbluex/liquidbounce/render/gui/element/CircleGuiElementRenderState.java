@@ -17,40 +17,47 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.render.gui.element;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
-/**
- * Float version of {@link net.minecraft.client.gui.render.state.BlitRenderState}
- */
-public record TexQuadGuiElementRenderState(
-    float x0,
-    float y0,
-    float x1,
-    float y1,
-    float u1,
-    float v1,
-    float u2,
-    float v2,
-    int argb,
+public record CircleGuiElementRenderState(
+    float x,
+    float y,
+    float radius,
+    float innerRatio,
+    int lutRow,
     RenderPipeline pipeline,
     TextureSetup textureSetup,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
-) implements LiquidBounceGuiElementRenderState {
-    @Override
-    public void buildVertices(VertexConsumer vertices) {
-        vertices.addVertexWith2DPose(pose, x0, y0).setUv(u1, v1).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x0, y1).setUv(u1, v2).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x1, y1).setUv(u2, v2).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x1, y0).setUv(u2, v1).setColor(argb);
+) implements PoseReusableGuiElementRenderState {
+
+    private static final int INNER_RATIO_SCALE = 32767;
+
+    public CircleGuiElementRenderState {
+        assert pipeline.getVertexFormatMode() == VertexFormat.Mode.QUADS;
     }
 
+    @Override
+    public void buildVertices(VertexConsumer vertices) {
+        int encodedInnerRatio = Math.round(Mth.clamp(innerRatio(), 0.0f, 1.0f) * INNER_RATIO_SCALE);
+        float x0 = x() - radius();
+        float y0 = y() - radius();
+        float x1 = x() + radius();
+        float y1 = y() + radius();
+
+        vertices.addVertexWith2DPose(pose, x0, y0).setUv(0.0f, 0.0f).setUv2(lutRow(), encodedInnerRatio);
+        vertices.addVertexWith2DPose(pose, x0, y1).setUv(0.0f, 1.0f).setUv2(lutRow(), encodedInnerRatio);
+        vertices.addVertexWith2DPose(pose, x1, y1).setUv(1.0f, 1.0f).setUv2(lutRow(), encodedInnerRatio);
+        vertices.addVertexWith2DPose(pose, x1, y0).setUv(1.0f, 0.0f).setUv2(lutRow(), encodedInnerRatio);
+    }
 }
