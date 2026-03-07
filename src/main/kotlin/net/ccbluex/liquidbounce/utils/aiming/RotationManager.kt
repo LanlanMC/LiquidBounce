@@ -259,7 +259,7 @@ object RotationManager : EventListener {
             else -> return@handler
         }
 
-        // This normally applies to Modules like Blink, BadWifi, etc.
+        // This normally applies to Modules like Blink, FakeLag, etc.
         if (!event.isCancelled) {
             actualServerRotation = rotation
         }
