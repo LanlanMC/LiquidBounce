@@ -698,8 +698,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModulePacketMine,
             ModuleHoleFiller,
             ModuleStrongholdFinder,
-            ModuleSidePlace
-            ModuleNoInterpolation,
+            ModuleSidePlace,
+            ModuleNoInterpolation
         )
 
         builtin.forEach { module ->

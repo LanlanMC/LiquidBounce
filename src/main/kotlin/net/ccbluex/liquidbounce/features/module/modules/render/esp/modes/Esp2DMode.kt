@@ -39,7 +39,6 @@ object Esp2DMode : EspMode.BoxBased("2D") {
     object Border: ToggleableValueGroup(this, "Border", true) {
         val thickness by int("Thickness", 1, 1..9, "px")
     }
-    private val expand by float("Expand", 0.05f, 0f..0.5f)
 
     private val fill by boolean("Fill", true)
     object HealthBar: ToggleableValueGroup(this, "HealthBar", true) {
@@ -65,10 +64,10 @@ object Esp2DMode : EspMode.BoxBased("2D") {
             val outlineColor = color.with(a = 255)
             val black = Color4b.BLACK
 
-            val minX = projected.minOf { it.x }
-            val maxX = projected.maxOf { it.x }
-            val minY = projected.minOf { it.y }
-            val maxY = projected.maxOf { it.y }
+            val minX = projected.minOf { it.x } - expand
+            val maxX = projected.maxOf { it.x } + expand
+            val minY = projected.minOf { it.y } - expand
+            val maxY = projected.maxOf { it.y } + expand
             val rectWidth = maxX - minX
             val rectHeight = maxY - minY
 

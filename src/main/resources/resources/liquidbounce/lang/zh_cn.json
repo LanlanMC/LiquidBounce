@@ -793,5 +793,4 @@
   "liquidbounce.module.strongholdFinder.description": "跟踪末影之眼投掷并预测最可能的要塞区块候选。",
   "liquidbounce.module.strongholdFinder.messages.sampleCaptured": "已采集样本（#%s）。",
   "liquidbounce.module.strongholdFinder.messages.bestChunk": "最佳区块：%s, %s（p=%s%%）。"
-
 }
