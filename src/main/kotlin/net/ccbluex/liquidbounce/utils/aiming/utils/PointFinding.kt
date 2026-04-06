@@ -27,12 +27,11 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.add
 import net.ccbluex.liquidbounce.utils.math.firstHit
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.entity.projectile.arrow.Arrow
@@ -174,7 +173,6 @@ inline fun projectPointsOnBox(
  * @param visibilityPredicate An optional predicate to determine if a given point is visible
  * @return the best visible spot found or `null`
  */
-@Suppress("detekt:complexity.LongParameterList")
 fun findVisiblePointFromVirtualEye(
     virtualEyes: Vec3,
     box: AABB,
@@ -194,7 +192,7 @@ fun findVisiblePointFromVirtualEye(
 
     for (spot in points) {
         val vecFromEyes = spot - virtualEyes
-        val raycastTarget = vecFromEyes * 2.0 + virtualEyes
+        val raycastTarget = virtualEyes.fma(2.0, vecFromEyes)
         val spotOnBox = box.firstHit(virtualEyes, raycastTarget) ?: continue
 
         val rayStart = spotOnBox - vecFromEyes.withLength(rangeToTest)
@@ -217,7 +215,7 @@ fun findVisiblePointFromVirtualEye(
 object ArrowVisibilityPredicate : VisibilityPredicate {
     override fun isVisible(eyesPos: Vec3, targetSpot: Vec3): Boolean {
         val arrowEntity = Arrow(
-            world, eyesPos.x, targetSpot.y, targetSpot.z, ItemStack(Items.ARROW),
+            world, eyesPos.x, eyesPos.y, eyesPos.z, ItemStack(Items.ARROW),
             null)
 
         return world.clip(

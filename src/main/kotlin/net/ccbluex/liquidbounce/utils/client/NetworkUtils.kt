@@ -21,14 +21,14 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
-import net.ccbluex.liquidbounce.event.nextTick
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
@@ -176,7 +176,7 @@ fun LocalPlayer.clickBlockWithSlot(
     this.inventory.selectedSlot = prevHotbarSlot
 }
 
-fun MultiPlayerGameMode.releaseUsingItemNextTick() = nextTick {
+fun MultiPlayerGameMode.releaseUsingItemInTickLoop() = TickLoopTaskExecutor.executeInTickLoop {
     this.releaseUsingItem(player)
 }
 
@@ -232,20 +232,25 @@ fun sendPacketSilently(packet: Packet<*>) {
     mc.connection?.connection?.send(packetEvent.packet, null)
 }
 
-enum class MovePacketType(override val tag: String, val generatePacket: () -> ServerboundMovePlayerPacket)
-    : Tagged {
-    ON_GROUND_ONLY("OnGroundOnly", {
-        ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
-    }),
-    POSITION_AND_ON_GROUND("PositionAndOnGround", {
-        ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, player.onGround(),
-            player.horizontalCollision)
-    }),
-    LOOK_AND_ON_GROUND("LookAndOnGround", {
-        ServerboundMovePlayerPacket.Rot(player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
-    }),
-    FULL("Full", {
-        ServerboundMovePlayerPacket.PosRot(player.x, player.y, player.z, player.yRot, player.xRot, player.onGround(),
-            player.horizontalCollision)
-    });
+enum class MovePacketType(override val tag: String) : Tagged {
+    ON_GROUND_ONLY("OnGroundOnly") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
+    },
+    POSITION_AND_ON_GROUND("PositionAndOnGround") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z,
+                player.onGround(), player.horizontalCollision)
+    },
+    LOOK_AND_ON_GROUND("LookAndOnGround") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.Rot(player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
+    },
+    FULL("Full") {
+        override fun generatePacket() =
+            ServerboundMovePlayerPacket.PosRot(player.x, player.y, player.z,
+                player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
+    };
+
+    abstract fun generatePacket(): ServerboundMovePlayerPacket
 }

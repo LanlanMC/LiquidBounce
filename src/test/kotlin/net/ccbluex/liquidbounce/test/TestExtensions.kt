@@ -16,12 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.entity
 
-import net.minecraft.world.phys.Vec3
+package net.ccbluex.liquidbounce.test
 
-class RigidPlayerSimulation(override val pos: Vec3) : PlayerSimulation {
-    override fun tick() {
-        // Do nothing.
-    }
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+
+fun <E> assertIn(collection: Collection<E>, element: E) {
+    assertTrue(collection.contains(element))
+}
+
+fun <E> assertNotIn(collection: Collection<E>, element: E) {
+    assertFalse(collection.contains(element))
 }

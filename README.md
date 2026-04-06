@@ -57,3 +57,12 @@ Mixins 可用于在加载类之前在运行时修改类。LiquidBounce 使用它
 ## 统计信息
 
 ![Alt](https://repobeats.axiom.co/api/embed/ad3a9161793c4dfe50934cd4442d25dc3ca93128.svg "Repobeats analytics image")
+
+## Imprint
+
+**CCBlueX**  
+Vahrenwalder Str. 269A
+30179 Hanover
+Germany
+
+**Owner and responsible for the content:** Marco Beyer

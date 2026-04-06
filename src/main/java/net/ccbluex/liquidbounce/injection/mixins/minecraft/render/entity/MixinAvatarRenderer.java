@@ -31,6 +31,7 @@ import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.item.ItemStack;
@@ -51,12 +52,18 @@ public abstract class MixinAvatarRenderer {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (player == localPlayer
             && ModuleSwordBlock.INSTANCE.getApplyToThirdPersonView()
-            && ModuleSwordBlock.INSTANCE.shouldHideOffhand()
         ) {
-            if (hand == InteractionHand.OFF_HAND) {
-                cir.setReturnValue(HumanoidModel.ArmPose.EMPTY);
-            } else if (localPlayer.isUsingItem()) {
-                cir.setReturnValue(HumanoidModel.ArmPose.BLOCK);
+            switch (hand) {
+                case MAIN_HAND -> {
+                    if (ModuleSwordBlock.shouldAnimateSwordBlock(localPlayer, stack)) {
+                        cir.setReturnValue(HumanoidModel.ArmPose.BLOCK);
+                    }
+                }
+                case OFF_HAND -> {
+                    if (ModuleSwordBlock.INSTANCE.shouldHideOffhand()) {
+                        cir.setReturnValue(HumanoidModel.ArmPose.EMPTY);
+                    }
+                }
             }
         }
     }

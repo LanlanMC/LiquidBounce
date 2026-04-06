@@ -75,7 +75,7 @@ val BoundingBox.box: AABB
     lengthX.toDouble(), lengthY.toDouble(), lengthZ.toDouble(),
 )
 
-fun BoundingBox.centerPointOf(side: Direction): Vec3 =
+fun BoundingBox.centerOnSide(side: Direction): Vec3 =
     when (side) {
         Direction.DOWN  -> Vec3(lengthX * 0.5, minY() - 0.5, lengthZ * 0.5)
         Direction.UP    -> Vec3(lengthX * 0.5, maxY() + 0.5, lengthZ * 0.5)
@@ -97,7 +97,7 @@ inline fun BoundingBox.copy(
 ): BoundingBox = BoundingBox(minX, minY, minZ, maxX, maxY, maxZ)
 
 @JvmSynthetic
-fun BlockPos.expendToBlockBox(
+fun BlockPos.expandToBoundingBox(
     offsetX: Int = 0,
     offsetY: Int = 0,
     offsetZ: Int = 0,

@@ -28,13 +28,10 @@ import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
-import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.world.phys.AABB
 
-object Esp2DMode : EspMode("2D") {
+object Esp2DMode : EspMode.BoxBased("2D") {
 
     object Outline: ToggleableValueGroup(this, "Outline", true) {
         val thickness by int("Thickness", 1, 1..9, "px")
@@ -43,6 +40,7 @@ object Esp2DMode : EspMode("2D") {
         val thickness by int("Thickness", 1, 1..9, "px")
     }
     private val expand by float("Expand", 0.05f, 0f..0.5f)
+
     private val fill by boolean("Fill", true)
     object HealthBar: ToggleableValueGroup(this, "HealthBar", true) {
         val spacing by int("Spacing", 2, 0..32, "px")
@@ -56,15 +54,7 @@ object Esp2DMode : EspMode("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        for (entity in RenderedEntities) {
-            if (!shouldRender(entity)) continue
-
-            val dimensions = entity.getDimensions(entity.pose)
-            val d = dimensions.width.toDouble() / 2.0
-            val boxNoOffset = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(expand.toDouble())
-            val pos = entity.interpolateCurrentPosition(event.tickDelta)
-            val box = boxNoOffset.move(pos)
-
+        for ((entity, _, _, box) in collectPreparedBoxes(event.tickDelta)) {
             val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
                 continue

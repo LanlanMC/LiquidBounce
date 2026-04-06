@@ -48,8 +48,12 @@ allprojects {
         mavenCentral()
         mavenLocal()
         maven {
-            name = "CCBlueX"
+            name = "CCBlueX Releases"
             url = uri("https://maven.ccbluex.net/releases")
+        }
+        maven {
+            name = "CCBlueX Snapshots"
+            url = uri("https://maven.ccbluex.net/snapshots")
         }
         maven {
             name = "Fabric"
@@ -78,10 +82,6 @@ allprojects {
         maven {
             name = "Lenni0451"
             url = uri("https://maven.lenni0451.net/everything")
-        }
-        maven {
-            name = "NikOverflow"
-            url = uri("https://reposilite.nikoverflow.com/releases")
         }
         maven {
             name = "ParchmentMC"
@@ -167,9 +167,9 @@ dependencies {
     jij(libs.fastutil4k.moreCollections)
 
     // Test libraries
-    testImplementation(kotlin("test"))
+    // testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
-//    testImplementation(libs.fabric.loader.junit)
+    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -185,12 +185,21 @@ tasks.processResources {
     val minLoaderVersion = libs.versions.fabric.loaderMin
     val fabricKotlinVersion = libs.versions.fabric.kotlin
     val viafabricplusVersion = libs.versions.viafabricplus
+    val isGitHubCi = providers.environmentVariable("GITHUB_ACTIONS")
+        .map { it.toBoolean() }
+        .orElse(false)
 
-    val contributors = provider {
-        JsonOutput.prettyPrint(
-            JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
-        )
+    val contributorsJson by lazy {
+        if (!isGitHubCi.get()) {
+            logger.lifecycle("Skipping contributor fetch outside GitHub CI")
+            "[]"
+        } else {
+            val contributors = getContributors("CCBlueX", "LiquidBounce")
+            logger.lifecycle("Fetched ${contributors.size} contributors on GitHub CI")
+            JsonOutput.prettyPrint(JsonOutput.toJson(contributors))
+        }
     }
+    val contributors = provider { contributorsJson }
 
     inputs.property("version", modVersion)
     inputs.property("minecraft_version", minecraftVersion)

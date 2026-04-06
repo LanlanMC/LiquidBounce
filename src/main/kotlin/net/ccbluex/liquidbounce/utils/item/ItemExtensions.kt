@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.commands.arguments.item.ItemInput
 import net.minecraft.commands.arguments.item.ItemParser
 import net.minecraft.core.BlockPos
@@ -79,8 +80,11 @@ import net.minecraft.world.item.WrittenBookItem
 import net.minecraft.world.item.alchemy.PotionContents
 import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents
+import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
 import org.apache.commons.lang3.function.Consumers
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
@@ -107,6 +111,10 @@ fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemSta
     return itemStack
 }
 
+fun ItemStack.getPotionEffects(): Iterable<MobEffectInstance> {
+    return this[DataComponents.POTION_CONTENTS]?.allEffects ?: emptyList()
+}
+
 /**
  * @return if this item stack has same [Item] and [net.minecraft.core.component.DataComponentPatch]
  * with the other item stack
@@ -119,8 +127,11 @@ fun ItemStack.canMerge(other: ItemStack): Boolean {
 
 val ItemStack.attackDamage: Double
     get() {
-        val entityBaseDamage = player.getAttributeValue(Attributes.ATTACK_DAMAGE)
-        val baseDamage = getAttributeValue(Attributes.ATTACK_DAMAGE, EquipmentSlot.MAINHAND)
+        val baseDamage = getAttributeValue(
+            Attributes.ATTACK_DAMAGE,
+            EquipmentSlot.MAINHAND,
+            player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+        )
 
         /*
          * Client-side damage calculation for enchantments does not exist anymore
@@ -131,7 +142,7 @@ val ItemStack.attackDamage: Double
          * >= 1.9 -> 0.5 * level + 0.5
          * else -> 1.25 * level
          */
-        return entityBaseDamage + baseDamage + getSharpnessDamage()
+        return baseDamage + getSharpnessDamage()
     }
 
 @JvmOverloads
@@ -146,16 +157,25 @@ fun ItemStack.getSharpnessDamage(level: Int = getEnchantment(Enchantments.SHARPN
     }
 
 val ItemStack.attackSpeed: Double
-    get() = getAttributeValue(Attributes.ATTACK_SPEED, EquipmentSlot.MAINHAND)
+    get() = getAttributeValue(
+        Attributes.ATTACK_SPEED,
+        EquipmentSlot.MAINHAND,
+        player.getAttributeBaseValue(Attributes.ATTACK_SPEED)
+    )
 
 val ItemStack.durability
     get() = this.maxDamage - this.damageValue
 
 @JvmOverloads
-fun DataComponentGetter.getAttributeValue(attribute: Holder<Attribute>, slot: EquipmentSlot? = null): Double {
-    val attributeModifiers = this[DataComponents.ATTRIBUTE_MODIFIERS] ?: return 0.0
-
+fun DataComponentGetter.getAttributeValue(
+    attribute: Holder<Attribute>,
+    slot: EquipmentSlot? = null,
+    baseValue: Double = attribute.value().defaultValue,
+): Double {
     val attribInstance = AttributeInstance(attribute, Consumers.nop())
+    attribInstance.baseValue = baseValue
+
+    val attributeModifiers = this[DataComponents.ATTRIBUTE_MODIFIERS] ?: return attribInstance.value
 
     for (entry in attributeModifiers.modifiers) {
         if ((slot?.let(entry.slot::test) ?: true) && entry.attribute == attribute) {
@@ -171,6 +191,23 @@ fun <E : Any> ResourceKey<Registry<E>>.getOrNull(): Registry<E>? =
 
 fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? =
     Registries.ENCHANTMENT.getOrNull()?.get(this)?.getOrNull()
+
+/**
+ * @see net.minecraft.world.entity.player.Player.getDestroySpeed
+ * @see net.minecraft.world.entity.ai.attributes.Attributes.MINING_EFFICIENCY
+ * @see net.minecraft.world.item.enchantment.LevelBasedValue.LevelsSquared
+ */
+fun ItemStack.getDestroySpeedWithEnchantment(state: BlockState): Float {
+    var speed = this.getDestroySpeed(state)
+
+    val enchantmentLevel = this.getEnchantment(Enchantments.EFFICIENCY)
+    if (speed > 1f && enchantmentLevel != 0) {
+        val enchantmentAddition = enchantmentLevel.sq() + 1f
+        speed += enchantmentAddition.coerceIn(0f, 1024f)
+    }
+
+    return speed
+}
 
 /**
  * Get [Block] of inner item if it is [BlockItem], or null if not
@@ -195,7 +232,16 @@ fun ItemStack.isInteractable(): Boolean {
     }
 
     return this.get(DataComponents.EQUIPPABLE)
-        ?.let { player.getItemBySlot(it.slot).getEnchantment(Enchantments.BINDING_CURSE) != 0 } ?: false
+        ?.let { equippable ->
+            val equippedItem = player.getItemBySlot(equippable.slot)
+
+            equippable.swappable
+                && player.canUseSlot(equippable.slot)
+                && equippable.canBeEquippedBy(player.type)
+                && !ItemStack.isSameItemSameComponents(this, equippedItem)
+                && (!EnchantmentHelper.has(equippedItem, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE)
+                    || player.isCreative)
+        } ?: false
         || this.has(DataComponents.CONSUMABLE)
         || this.has(DataComponents.BLOCKS_ATTACKS) // Shield, 1.8 Sword
         || this.has(DataComponents.KINETIC_WEAPON) // Spear

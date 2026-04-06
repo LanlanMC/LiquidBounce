@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.inventory.useItem
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -171,8 +171,10 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         val yaw = rotation.yaw
         val pitch = rotation.pitch
 
-        val (trajectoryInfo, _) =
-            TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
+        val trajectoryInfo = HeldItemTrajectoryResolver
+            .resolveHeldItemPrimaryShot(player, player.activeItem, false)
+            ?.trajectoryInfo
+            ?: return null
 
         val velocity = trajectoryInfo.initialVelocity
 
@@ -218,7 +220,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         return world.entitiesForRendering().filter { entity ->
             entity != player &&
                 entity.shouldBeAttacked() &&
-                Line(player.position(), player.rotation.directionVector)
+                Line(player.eyePosition, player.rotation.directionVector)
                     .distanceToSqr(entity.position()) < 10.0 * 10.0
         }.map { entity ->
             val simulation = if (entity is AbstractClientPlayer) {

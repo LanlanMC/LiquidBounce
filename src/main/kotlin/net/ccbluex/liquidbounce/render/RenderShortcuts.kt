@@ -40,6 +40,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
@@ -140,12 +141,12 @@ inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> U
 }
 
 internal inline fun RenderTarget.drawGenericBlockESP(
-    renderState: RenderPassRenderState,
+    renderState: StaticMeshStorage,
     pipeline: RenderPipeline,
     distanceFade: DistanceFadeUniformValueGroup,
     dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,
 ): Boolean {
-    if (!renderState.ready) return false
+    if (!renderState.isReady) return false
 
     distanceFade.updateIfDirty()
     val dynamicTransforms = dynamicTransforms()
@@ -348,6 +349,44 @@ fun WorldRenderEnvironment.drawBox(
     }
 }
 
+fun WorldRenderEnvironment.drawShape(
+    shape: VoxelShape,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addShapeFaces(pose.pose(), shape, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addShapeOutlines(pose.pose(), shape, outlineColor)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShapeSide(
+    shape: VoxelShape,
+    side: Direction,
+    hitPos: Vec3,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+            addShapeSideFaces(pose.pose(), shape, side, hitPos, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+            addShapeSideOutlines(pose.pose(), shape, side, hitPos, outlineColor)
+        }
+    }
+}
+
 /**
  * Function to draw a colored [box] with specified [side].
  */
@@ -433,7 +472,7 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerOffset: Vector3fc = Vector3f(),
     noDepthTest: Boolean = true,
 ) {
-    if (outerRadius <= 0f) {
+    if (outerRadius <= 0f || outerColor.isTransparent && innerColor.isTransparent) {
         return
     }
 
@@ -520,7 +559,7 @@ fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    if (radius <= 0f) {
+    if (radius <= 0f || color.isTransparent) {
         return
     }
 
@@ -541,6 +580,10 @@ fun WorldRenderEnvironment.drawCircle(
  */
 @JvmOverloads
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
+    if (radius <= 0f || color.isTransparent) {
+        return
+    }
+
     drawRoundedRectQuad(
         radius = radius,
         argb = color.argb,
