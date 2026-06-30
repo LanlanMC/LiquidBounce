@@ -19,8 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.world.phys.Vec3
 
@@ -57,8 +59,9 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", ModuleCategories.RENDER
         }
         // This provides better responsiveness when switching perspectives
         if (resetOnPerspectiveChange && lastPerspective != perspective) {
-            smoothPos = pos
+            notification("SmoothCamera", "reset", NotificationEvent.Severity.INFO)
             lastPerspective = perspective
+            smoothPos = pos
             return
         }
         lastPerspective = perspective

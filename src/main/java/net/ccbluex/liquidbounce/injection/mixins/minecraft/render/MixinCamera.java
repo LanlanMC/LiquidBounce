@@ -70,9 +70,6 @@ public abstract class MixinCamera {
     public abstract void setPosition(Vec3 pos);
 
     @Shadow
-    private @Nullable Entity entity;
-
-    @Shadow
     @Final
     private Minecraft minecraft;
 
