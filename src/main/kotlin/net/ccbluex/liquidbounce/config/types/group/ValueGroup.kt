@@ -45,12 +45,13 @@ import net.ccbluex.liquidbounce.config.types.list.ListValue
 import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.MutableListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
+import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -359,6 +360,14 @@ open class ValueGroup(
         this@ValueGroup.inner.add(this)
     }
 
+    internal inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = RegistryMutableListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@ValueGroup.inner.add(this)
+    }
+
     private fun <T : Any> rangedValue(
         name: String,
         defaultValue: T,
@@ -472,6 +481,9 @@ open class ValueGroup(
 
     fun <C : SequencedSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
+
+    fun <C : MutableList<Item>> itemList(name: String, default: C) =
+        registryMutableList(name, default, ValueType.ITEM)
 
     fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND_EVENT)

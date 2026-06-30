@@ -23,8 +23,7 @@ import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.iterator
@@ -36,7 +35,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 
 
 /**
@@ -48,11 +46,10 @@ fun getDegreesRelativeToView(
     positionRelativeToPlayer: Vec3,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yRot,
 ): Float {
-    val optimalYaw =
-        atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat()
-    val currentYaw = Mth.wrapDegrees(yaw).toRadians()
+    val optimalYaw = positionRelativeToPlayer.yaw
+    val currentYaw = Mth.wrapDegrees(yaw)
 
-    return Mth.wrapDegrees((optimalYaw - currentYaw).toDegrees())
+    return Mth.wrapDegrees(optimalYaw - currentYaw)
 }
 
 fun getDirectionalInputForDegrees(
@@ -65,15 +62,15 @@ fun getDirectionalInputForDegrees(
     var left = directionalInput.left
     var right = directionalInput.right
 
-    if (dgs in -90.0F + deadAngle..90.0F - deadAngle) {
+    if (dgs > -90.0F + deadAngle && dgs < 90.0F - deadAngle) {
         forwards = true
-    } else if (dgs < -90.0 - deadAngle || dgs > 90.0 + deadAngle) {
+    } else if (dgs < -90.0F - deadAngle || dgs > 90.0F + deadAngle) {
         backwards = true
     }
 
-    if (dgs in 0.0F + deadAngle..180.0F - deadAngle) {
+    if (dgs > 0.0F + deadAngle && dgs < 180.0F - deadAngle) {
         right = true
-    } else if (dgs in -180.0F + deadAngle..0.0F - deadAngle) {
+    } else if (dgs > -180.0F + deadAngle && dgs < 0.0F - deadAngle) {
         left = true
     }
 
@@ -85,11 +82,15 @@ fun findEdgeCollision(
     to: Vec3,
     allowedDropDown: Float = 0.5F,
 ): Vec3? {
+    val lineVec = to - from
+    if (lineVec.lengthSqr() <= 1.0E-12) {
+        return null
+    }
+
     val boundingBoxes = collectCollisionBoundingBoxes(from, to, allowedDropDown)
 
     var currentFrom = from
 
-    val lineVec = to - from
     val extendedFrom = from.fma(-1000.0, lineVec)
     val extendedTo = to.fma(1000.0, lineVec)
 
@@ -112,7 +113,9 @@ fun findEdgeCollision(
                 val res = it.clip(extendedTo, extendedFrom)
 
                 // This ray-cast should never fail.
-                res.orElseThrow { IllegalArgumentException("Raycast failed. This should be impossible.") }
+                requireNotNull(res.orElse(null)) {
+                    "Raycast failed. This should be impossible. AABB=$it from=$from to=$to"
+                }
             }.minBy { it.distanceToSqr(to) }
 
         boundingBoxes.removeAll(boxesContainingFrom)
@@ -178,6 +181,10 @@ private fun collectCollisionBoundingBoxes(
     }
 
     return foundBoxes
+}
+
+inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
+    this.deltaMovement = block(this.deltaMovement)
 }
 
 fun LocalPlayer.stopXZVelocity() {

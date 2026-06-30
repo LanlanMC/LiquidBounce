@@ -28,7 +28,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
@@ -36,8 +35,8 @@ import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw
-import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.bindAndDraw
-import net.ccbluex.liquidbounce.render.mesh.MeshDraw.Companion.toMeshDraw
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.bindAndDraw
+import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.toMeshDraw
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.immutableCopy
 import net.ccbluex.liquidbounce.utils.kotlin.memorizingFunction
@@ -45,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.render.begin
 import net.ccbluex.liquidbounce.utils.render.reset
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec3
@@ -71,8 +71,23 @@ inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
     }
 }
 
+inline fun PoseStack.translate(x: Int, y: Int, z: Int) =
+    translate(x.toFloat(), y.toFloat(), z.toFloat())
+
 inline fun PoseStack.translate(vec3i: Vec3i) =
-    translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
+    translate(vec3i.x, vec3i.y, vec3i.z)
+
+/**
+ * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
+ * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP
+ */
+inline fun PoseStack.translate(blockPos: Long, origin: BlockPos) {
+    translate(
+        BlockPos.getX(blockPos) - origin.x,
+        BlockPos.getY(blockPos) - origin.y,
+        BlockPos.getZ(blockPos) - origin.z,
+    )
+}
 
 /**
  * Submission strategy for geometry started in [WorldRenderEnvironment].
@@ -137,7 +152,7 @@ internal class BatchCollector {
             }
             bufferBuilders.clear()
 
-            if (builtBuffers.isEmpty()) {
+            if (builtBuffers.isEmpty) {
                 return
             }
 
@@ -235,7 +250,7 @@ class WorldRenderEnvironment internal constructor(
             return batchCollector.start(key)
         }
 
-        val immediateBuilder = Tesselator.getInstance().begin(pipeline)
+        val immediateBuilder = ClientTesselator.Shared.begin(pipeline)
         val pending = pendingImmediateDraws ?: immediateDrawMapPool.borrow().also {
             pendingImmediateDraws = it
         }
@@ -384,7 +399,7 @@ private fun PoseStack.copyFrom(source: PoseStack) {
 }
 
 private fun RenderPipeline.requiresImmediateDrawInBatch(): Boolean =
-    vertexFormatMode.connectedPrimitives
+    primitiveTopology.connectedPrimitives
 
 private fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
     x - camera.position().x,

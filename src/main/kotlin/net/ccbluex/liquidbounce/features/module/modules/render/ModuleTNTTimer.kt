@@ -31,10 +31,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.withColor
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.plus
+import net.ccbluex.liquidbounce.utils.text.textOf
+import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.item.PrimedTnt
 import java.text.DecimalFormat
@@ -75,19 +76,23 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val render2DHandler = handler<OverlayRenderEvent> { event ->
             for (tnt in tntEntities) {
-                val pos = tnt.box.center.add(0.0, renderY.toDouble(), 0.0)
+                val pos = tnt.boundingBox.center.add(0.0, renderY.toDouble(), 0.0)
 
                 val screenPos = WorldToScreen.calculateScreenPos(pos) ?: continue
 
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
 
-                val text = "".asText()
-                    .append(timeUnit.apply(tnt.fuse).asText().withColor(color.toTextColor()))
+                var text = timeUnit.apply(tnt.fuse).asPlainText(Style.EMPTY + color)
 
                 if (ownerName) {
                     tnt.owner?.name?.let {
-                        text.append(" (").append(it).append(")")
+                        text = textOf(
+                            text,
+                            " (".asPlainText(),
+                            it,
+                            ")".asPlainText(),
+                        )
                     }
                 }
 

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleB
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
@@ -48,7 +49,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
+import net.ccbluex.liquidbounce.utils.client.RequestHandler
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -147,7 +148,7 @@ object RotationManager : EventListener {
         }
 
         if (rotationTarget.considerInventory) {
-            if (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen) {
+            if (InventoryManager.isInventoryOpen || mc.gui.screen() is ContainerScreen) {
                 return false
             }
         }
@@ -209,16 +210,12 @@ object RotationManager : EventListener {
             val currentRotation = currentRotation ?: return@handler
             val timerSpeed = Timer.timerSpeed
 
-            val yaw = playerRotation.yaw + (currentRotation.yaw - playerRotation.yaw) * (timerSpeed * partialTicks)
-            val pitch =
-                playerRotation.pitch + (currentRotation.pitch - playerRotation.pitch) * (timerSpeed * partialTicks)
-
-            val interpolated = Rotation(yaw = yaw, pitch = pitch)
+            val interpolated = playerRotation.interpolateTo(currentRotation, timerSpeed * partialTicks)
             player.setRotation(interpolated)
         }
     }
 
-    @Suppress("unused", "MagicNumber")
+    @Suppress("unused")
     private val mouseMovement = handler<MouseRotationEvent> { event ->
         val activeRotationTarget = this.activeRotationTarget ?: return@handler
         if (!isRotatingAllowed(activeRotationTarget) ||
@@ -226,11 +223,8 @@ object RotationManager : EventListener {
             return@handler
         }
 
-        val f = event.cursorDeltaY.toFloat() * 0.15f
-        val g = event.cursorDeltaX.toFloat() * 0.15f
-
         fun adjustRotation(rotation: Rotation): Rotation =
-            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+            RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
         playerRotation?.let { rotation ->
             playerRotation = adjustRotation(rotation)

@@ -25,15 +25,16 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.useItem
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer
@@ -68,7 +69,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
         currentChargeRandom =
             (mid + ModuleAutoBow.random.nextGaussian() * lenHalf).toInt()
-                .coerceIn(chargedRandom.start.toInt()..chargedRandom.endInclusive.toInt())
+                .coerceIn(chargedRandom.start.toInt(), chargedRandom.endInclusive.toInt())
     }
 
     private fun getChargedRandom(): Int {
@@ -92,7 +93,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 return@handler
             }
 
-        val usingItemStack = if (player.isUsingItem) player.useItem else player.getItemInHand(usingItemHand)
+        val usingItemStack = player.usingItemOrNull ?: player.getItemInHand(usingItemHand)
 
         when (usingItemStack.item) {
             is CrossbowItem -> {

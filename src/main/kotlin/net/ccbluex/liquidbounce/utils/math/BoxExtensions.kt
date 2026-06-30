@@ -20,8 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.BlockPos
@@ -31,6 +29,18 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+
+val AABB.vertices: Array<Vec3>
+    get() = arrayOf(
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+    )
 
 // Box operators
 
@@ -45,6 +55,13 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
+
+data class WorldLocalBox(val origin: Vec3, val localBox: AABB)
+
+fun AABB.worldToLocal(): WorldLocalBox {
+    val origin = this.minPosition
+    return WorldLocalBox(origin, this - origin)
+}
 
 fun AABB.iterateBlockPos(
     minYInclusive: Int = minY.floorToInt(),

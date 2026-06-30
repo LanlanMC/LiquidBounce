@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.additions.setPosition
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screens.Screen
 
@@ -37,7 +37,7 @@ class CustomStandaloneMinecraftScreen(
         priority = 20,
         settings = ScreenManager.browserSettings
     ) {
-        mc.screen == this@CustomStandaloneMinecraftScreen
+        mc.gui.screen() == this@CustomStandaloneMinecraftScreen
     }
 
     init {

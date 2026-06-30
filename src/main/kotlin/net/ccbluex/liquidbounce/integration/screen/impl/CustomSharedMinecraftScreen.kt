@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screens.Screen
 
@@ -31,7 +31,7 @@ class CustomSharedMinecraftScreen(
     val screenType: CustomScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
-    val parentScreen: Screen? = mc.screen
+    val parentScreen: Screen? = mc.gui.screen()
 ) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
     override fun init() {
@@ -40,7 +40,7 @@ class CustomSharedMinecraftScreen(
 
     override fun onClose() {
         if (parentScreen is CustomSharedMinecraftScreen) {
-            mc.setScreen(parentScreen)
+            mc.gui.setScreen(parentScreen)
         } else {
             ScreenManager.closeScreen()
             mc.mouseHandler.grabMouse()

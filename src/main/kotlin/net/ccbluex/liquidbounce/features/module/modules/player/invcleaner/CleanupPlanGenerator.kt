@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
@@ -116,7 +117,7 @@ class CleanupPlanGenerator(
     }
 
     private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {
-        val itemsByType = HashMap<ItemAndComponents, MutableList<ItemSlot>>()
+        val itemsByType = Object2ObjectOpenHashMap<ItemAndComponents, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {
             val stack = availableSlot.itemStack
@@ -171,7 +172,7 @@ class CleanupPlanPlacementTemplate(
     /**
      * Contains requests for each slot (e.g. Slot 1 -> SWORD, Slot 8 -> BLOCK, etc.)
      */
-    val slotContentMap: Map<ItemSlot, ItemSortChoice>,
+    val slotContentMap: Map<out ItemSlot, ItemSortChoice>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
      * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].

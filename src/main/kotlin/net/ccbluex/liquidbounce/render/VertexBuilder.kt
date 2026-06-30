@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.math.forAllFaces
 import net.ccbluex.liquidbounce.utils.math.forAllSideFaces
 import net.ccbluex.liquidbounce.utils.math.forAllSideOutlineEdges
 import net.ccbluex.liquidbounce.utils.render.begin
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -225,22 +226,25 @@ private fun VertexConsumer.addColoredVertex(
 
 /**
  * Build new mesh data and upload it.
- * This method is designed for lazy building so [rotate] defaults to true.
+ *
+ * @param origin a preferred origin; the lambda receives the resolved origin that must be used
+ * for relative vertex positions.
  */
-inline fun StaticMeshStorage.buildMesh(
+inline fun CachedMeshStorage.buildMesh(
     pipeline: RenderPipeline,
-    rotate: Boolean = true,
-    block: VertexConsumer.(pose: PoseStack) -> Unit,
+    origin: BlockPos = BlockPos.ZERO,
+    block: VertexConsumer.(pose: PoseStack, origin: BlockPos) -> Unit,
 ) {
     clearStates()
+    val resolvedOrigin = this.resolveBaseBlockPos(origin)
 
     val bufferBuilder = this.byteBufferBuilder.begin(pipeline)
     usePoseStack {
-        bufferBuilder.block(this)
+        bufferBuilder.block(this, resolvedOrigin)
     }
 
     bufferBuilder.build()?.use { meshData ->
-        this.uploadAndSet(meshData, pipeline, rotate)
+        this.uploadAndSet(meshData, pipeline)
     }
 
     this.byteBufferBuilder.clear()

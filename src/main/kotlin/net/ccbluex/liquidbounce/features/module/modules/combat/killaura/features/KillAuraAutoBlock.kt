@@ -39,30 +39,33 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
-import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
-import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
+import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.entity.interactBlockLikeVanilla
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.interactEntityLikeVanilla
+import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.renderer.ItemInHandRenderer
-import net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.phys.HitResult
 import kotlin.random.Random
 
@@ -97,6 +100,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     private val prioritizeBlocking by boolean("PrioritizeBlocking", true)
     val onScanRange by boolean("OnScanRange", true)
     private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)
+
+    /** For 1.9~1.21.4 protocol on 1.8 server, server will send a shield to your offhand on using item */
+    private val assumeShield by boolean("AssumeShield", false)
 
     private var blockingTicks = 0
 
@@ -289,7 +295,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (!player.isBlocking) {
+        if (!player.isBlockingServerside) {
             return false
         }
 
@@ -408,9 +414,14 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     private fun findBlockableHand() = InteractionHand.entries.find {
         val itemStack = player.getItemInHand(it)
-        itemStack.has(BLOCKS_ATTACKS)
+        // 1.21.4 swords or normal shields
+        itemStack.useAnimation == ItemUseAnimation.BLOCK
             && itemStack.isItemEnabled(world.enabledFeatures())
             && !player.cooldowns.isOnCooldown(itemStack)
+    } ?: if (assumeShield && !isBlocksAttacksExisting && player.mainHandItem.isSword) {
+        InteractionHand.MAIN_HAND
+    } else {
+        null
     }
 
     enum class BlockMode(override val tag: String) : Tagged {

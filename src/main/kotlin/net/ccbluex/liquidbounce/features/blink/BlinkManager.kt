@@ -44,10 +44,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.network.position
 import net.minecraft.client.CameraType
@@ -199,17 +199,10 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         }
     }
 
-    private fun getEspData(): BlinkEspData? {
-        val pos = positions.firstOrNull() ?: return null
-        val rotation = RotationManager.actualServerRotation
-
-        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
-        if (perspectiveEvent.perspective == CameraType.FIRST_PERSON) {
-            return null
-        }
-
-        return BlinkEspData(player, pos, rotation)
-    }
+    private fun getEspData() = positions
+        .firstOrNull()
+        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
+        ?.let { BlinkEspData(player, it, RotationManager.actualServerRotation) }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->

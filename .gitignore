@@ -17,3 +17,4 @@
 yarn.lock
 /liquid-bounce-inbuilt-annotations/
 /node_modules/
+/.fabric/
