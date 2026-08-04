@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.vector2f
@@ -54,9 +55,9 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 /**
- * Rotations module
+ * Debug module
  *
- * Allows you to see server-sided rotations.
+ * Only of interest to developers.
  */
 
 object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
@@ -164,12 +165,15 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     @JvmRecord
     private data class DebuggedKey(val owner: DebuggedOwner, val name: String)
 
+    private val KEY_COMPARATOR = compareBy<DebuggedKey> { it.owner.debugOwnerId }
+        .thenComparing(DebuggedKey::name)
+
     @JvmRecord
     private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
 
-    private val debugParameters = Object2ObjectOpenHashMap<DebuggedKey, ParameterCapture>()
+    private val debugParameters = Object2ObjectRBTreeMap<DebuggedKey, ParameterCapture>(KEY_COMPARATOR)
 
-    private val debuggedGeometry = Object2ObjectOpenHashMap<DebuggedKey, DebuggedGeometry>()
+    private val debuggedGeometry = Object2ObjectRBTreeMap<DebuggedKey, DebuggedGeometry>(KEY_COMPARATOR)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -313,11 +317,13 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawLine(
-                env.relativeToCamera(from).toVec3f(),
-                env.relativeToCamera(to).toVec3f(),
-                color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
+            }
         }
     }
 
@@ -329,23 +335,27 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     ) : DebuggedGeometry {
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawTriangle(
-                p1 = env.relativeToCamera(p1).toVec3f(),
-                p2 = env.relativeToCamera(p2).toVec3f(),
-                p3 = env.relativeToCamera(p3).toVec3f(),
-                argb = color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawTriangle(
+                    p1 = p1.toVec3f(),
+                    p2 = p2.toVec3f(),
+                    p3 = p3.toVec3f(),
+                    argb = color.argb,
+                )
+            }
         }
     }
 
     class DebuggedLineSegment(val from: Vec3, val to: Vec3, val color: Color4b) : DebuggedGeometry {
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawLine(
-                env.relativeToCamera(from).toVec3f(),
-                env.relativeToCamera(to).toVec3f(),
-                color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
+            }
         }
     }
 

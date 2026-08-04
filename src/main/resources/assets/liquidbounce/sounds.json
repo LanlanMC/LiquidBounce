@@ -35,8 +35,8 @@
   "soft": {
     "sounds": ["liquidbounce:soft"]
   },
-  "magicsquash": {
-    "sounds": ["liquidbounce:magicsquash"]
+  "magic_squash": {
+    "sounds": ["liquidbounce:magic_squash"]
   },
   "squash": {
     "sounds": ["liquidbounce:squash"]

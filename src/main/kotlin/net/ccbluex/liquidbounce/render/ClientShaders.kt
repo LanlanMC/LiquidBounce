@@ -68,10 +68,16 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val BgraPosTex = "bgra_pos_tex_color"("shaders/bgra_position_tex_color.frag")
 
         @JvmField
+        val FontMask = "font_mask"("shaders/font_mask.frag")
+
+        @JvmField
         val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.fsh")
 
         @JvmField
         val Blit = "blit"("shaders/blit.frag")
+
+        @JvmField
+        val Chams = "chams"("shaders/chams.frag")
 
         @JvmField
         val Blend = "blend"("shaders/blend.frag")

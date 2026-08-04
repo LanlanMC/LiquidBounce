@@ -23,11 +23,16 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.minecraft.world.item.Item
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
-    private val availableItems: List<ItemSlot>,
+    availableItems: List<ItemSlot>,
 ) : ItemPacker.ItemAmountConstraintProvider {
+    private val availableItems = availableItems.filterNot {
+        it.itemStack.item in template.itemBlacklist
+    }
+
     private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
 
     private val packer = ItemPacker()
@@ -178,6 +183,7 @@ class CleanupPlanPlacementTemplate(
      * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
      */
     val itemAmountConstraintProvider: (ItemFacet) -> MutableList<ItemConstraintInfo>,
+    val itemBlacklist: Set<Item>,
     /**
      * If false, slots which also contains items of that category, those items are not replaced with other items.
      */

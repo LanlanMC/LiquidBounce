@@ -17,24 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog;
+package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
 
-import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.minecraft.client.renderer.fog.environment.BlindnessFogEnvironment;
-import net.minecraft.core.Holder;
-import net.minecraft.world.effect.MobEffect;
+import com.mojang.blaze3d.systems.RenderPass;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(BlindnessFogEnvironment.class)
-public abstract class MixinBlindnessFogEnvironment {
-    @Inject(method = "getMobEffect()Lnet/minecraft/core/Holder;", at = @At("HEAD"), cancellable = true)
-    public void hookGetStatusEffect(CallbackInfoReturnable<Holder<MobEffect>> cir) {
-        if (!ModuleAntiBlind.canRender(DoRender.BLINDING)) {
-            cir.setReturnValue(null);
-        }
+@Mixin(RenderPass.class)
+public abstract class MixinRenderPass {
+
+    @Inject(method = "close", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderPass;isClosed:Z", opcode = Opcodes.PUTFIELD))
+    private void onClose(CallbackInfo callbackInfo) {
+        RenderingDebug.increaseRenderPassCount();
     }
+
 }

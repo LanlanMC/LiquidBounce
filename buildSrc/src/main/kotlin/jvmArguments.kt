@@ -16,21 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.io
 
-import io.netty.bootstrap.AbstractBootstrap
-import io.netty.channel.Channel
-import net.minecraft.server.network.EventLoopGroupHolder
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.Classpath
+import org.gradle.process.CommandLineArgumentProvider
+import java.io.File
 
-/**
- * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [EventLoopGroupHolder]
- */
-internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
-    useEpoll: Boolean = true
-): B {
-    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
-    return channel(networkingBackend.channelCls())
-            .group(networkingBackend.eventLoopGroup())
+abstract class FabricSystemLibrariesArgumentProvider : CommandLineArgumentProvider {
+
+    @get:Classpath
+    abstract val runtimeClasspath: ConfigurableFileCollection
+
+    override fun asArguments(): Iterable<String> = listOf(
+        "-Dfabric.systemLibraries=${fabricSystemLibraries(runtimeClasspath.files)}",
+    )
 }
 
+private fun fabricSystemLibraries(
+    files: Iterable<File>,
+    pathSeparator: String = File.pathSeparator,
+): String = files.asSequence()
+    .filter { it.name.startsWith("kotlin-") }
+    .map(File::getAbsolutePath)
+    .sorted()
+    .joinToString(pathSeparator)

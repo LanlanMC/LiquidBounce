@@ -17,18 +17,21 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.utils.math.high32
-import net.ccbluex.liquidbounce.utils.math.longFrom32
-import net.ccbluex.liquidbounce.utils.math.low32
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@JvmInline
-value class IntIntValuePair private constructor(private val bits: Long) {
-    constructor(left: Int, right: Int): this(longFrom32(left, right))
-    inline val left get() = component1()
-    inline val right get() = component2()
+@Mixin(Entity.class)
+public interface MixinEntityAccessor {
+    @Accessor("position")
+    void position(Vec3 position);
 
-    operator fun component1(): Int = bits.high32()
-    operator fun component2(): Int = bits.low32()
+    @Accessor("xRot")
+    void xRot(float xRot);
+
+    @Accessor("yRot")
+    void yRot(float yRot);
 }
