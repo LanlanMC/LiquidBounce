@@ -59,7 +59,6 @@ import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.AxeItem

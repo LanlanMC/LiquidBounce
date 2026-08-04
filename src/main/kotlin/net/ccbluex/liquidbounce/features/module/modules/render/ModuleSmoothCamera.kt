@@ -59,7 +59,6 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", ModuleCategories.RENDER
         }
         // This provides better responsiveness when switching perspectives
         if (resetOnPerspectiveChange && lastPerspective != perspective) {
-            notification("SmoothCamera", "reset", NotificationEvent.Severity.INFO)
             lastPerspective = perspective
             smoothPos = pos
             return
